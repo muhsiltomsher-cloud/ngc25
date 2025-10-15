@@ -1,0 +1,366 @@
+"use client";
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
+import Link from 'next/link';
+import { allProducts } from '@/data/productsData';
+import { TLDRAW_LICENSE_KEY } from '@/lib/tldrawConfig';
+
+// Dynamically import tldraw to avoid SSR issues
+const Tldraw = dynamic(async () => (await import('@tldraw/tldraw')).Tldraw, { ssr: false });
+
+function ProductLibrary({ onInsert, disabled = false }: { onInsert?: (url: string, name?: string) => void; disabled?: boolean }) {
+  const [q, setQ] = useState('');
+
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    const out: { id: string; name: string; image: string; category: string }[] = [];
+    const seen = new Set<string>();
+    for (const p of allProducts) {
+      const baseName = p.name;
+      // Main product image
+      const mainId = `${p.id}#main`;
+      if (!seen.has(mainId)) {
+        seen.add(mainId);
+        out.push({ id: mainId, name: baseName, image: p.image, category: p.category });
+      }
+      // Variations
+      for (const v of p.variations ?? []) {
+        const vid = `${p.id}#var#${v.id}`;
+        if (!seen.has(vid)) {
+          seen.add(vid);
+          out.push({ id: vid, name: `${baseName} — ${v.name}`, image: v.image, category: p.category });
+        }
+        // Variation gallery (first 2 images to avoid flooding)
+        for (let i = 0; i < Math.min(2, (v.gallery ?? []).length); i++) {
+          const g = v.gallery![i];
+          const gid = `${p.id}#var#${v.id}#g${i}`;
+          if (!seen.has(gid)) {
+            seen.add(gid);
+            out.push({ id: gid, name: `${baseName} — ${v.name} (gallery ${i + 1})`, image: g, category: p.category });
+          }
+        }
+      }
+      // Product gallery (first 3 images)
+      for (let i = 0; i < Math.min(3, (p.gallery ?? []).length); i++) {
+        const g = p.gallery![i];
+        const gid = `${p.id}#g${i}`;
+        if (!seen.has(gid)) {
+          seen.add(gid);
+          out.push({ id: gid, name: `${baseName} (gallery ${i + 1})`, image: g, category: p.category });
+        }
+      }
+      // Views (installed / room / swatch) first image of each
+      const views = p.views ?? {} as any;
+      for (const key of ['installed','room','swatch']) {
+        const arr = (views[key] as string[] | undefined) ?? [];
+        if (arr.length) {
+          const id = `${p.id}#view#${key}`;
+          if (!seen.has(id)) {
+            seen.add(id);
+            out.push({ id, name: `${baseName} — ${key}`, image: arr[0], category: p.category });
+          }
+        }
+      }
+    }
+    if (!query) return out;
+    return out.filter(i => `${i.name} ${i.category}`.toLowerCase().includes(query));
+  }, [q]);
+
+  return (
+    <div className="w-full h-full flex flex-col">
+      <div className="p-3 border-b border-gray-200 bg-white/80 backdrop-blur">
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search products..."
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-800"
+        />
+      </div>
+      <div className="flex-1 overflow-auto p-3 space-y-4 bg-white/70">
+        <div>
+          <div className="px-1 pb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">Templates</div>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+  { title: 'Modern Living', url: '/images/instock/fabrics.png' },
+  { title: 'Workspace', url: '/images/instock/floorings.png' },
+  { title: 'Hospitality Suite', url: '/images/instock/wallcovering.png' },
+  { title: 'Wellness Spa', url: '/images/products/fabrics.png' },
+            ].map(t => (
+              <div key={t.title} className="group relative rounded-lg overflow-hidden border border-gray-200 bg-white">
+                <div className="aspect-[4/3] bg-gray-100">
+                  <img src={t.url} alt={t.title} className="w-full h-full object-cover" />
+                </div>
+                <div className="p-2 flex items-center justify-between">
+                  <div className="text-xs font-medium text-gray-800">{t.title}</div>
+                  <button
+                    className={`px-2 py-1 text-[11px] rounded-full border ${disabled ? 'border-gray-200 bg-gray-100 text-gray-400' : 'border-gray-300 bg-white hover:bg-gray-50'} `}
+                    onClick={() => onInsert && onInsert(t.url, t.title)}
+                    disabled={disabled || !onInsert}
+                  >
+                    Add as background
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {items.map((it) => (
+          <div key={it.id} className="flex items-center gap-3 p-2 rounded-lg border border-gray-200 bg-white hover:shadow-sm">
+            <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+              <img src={it.image} alt={it.name} className="w-full h-full object-cover" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium text-gray-900 truncate">{it.name}</div>
+              <div className="text-xs text-gray-600 truncate">{it.category}</div>
+            </div>
+            <button
+              className={`px-3 py-1 text-xs rounded-full border ${disabled ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed' : 'border-gray-300 bg-white hover:bg-gray-50'}`}
+              onClick={() => onInsert && onInsert(it.image, it.name)}
+              disabled={disabled || !onInsert}
+            >
+              Add
+            </button>
+            <Link
+              href={`/product/${it.id}`}
+              className="px-3 py-1 text-xs rounded-full bg-gray-900 text-white hover:bg-black"
+              title="View details"
+            >
+              View
+            </Link>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Toolbar({ onExportPng, onSave, onLoad, onClear, onReset }: { onExportPng: () => void; onSave: () => void; onLoad: () => void; onClear: () => void; onReset: () => void; }) {
+  return (
+    <div className="absolute top-3 left-1/2 -translate-x-1/2 z-50 flex gap-2 bg-white/90 backdrop-blur rounded-full border border-gray-200 p-1 shadow-sm">
+      <button className="px-3 py-1 text-sm rounded-full hover:bg-gray-50" onClick={onExportPng}>Export PNG</button>
+      <button className="px-3 py-1 text-sm rounded-full hover:bg-gray-50" onClick={onSave}>Save</button>
+      <button className="px-3 py-1 text-sm rounded-full hover:bg-gray-50" onClick={onLoad}>Load</button>
+      <button className="px-3 py-1 text-sm rounded-full hover:bg-gray-50" onClick={onClear}>Clear</button>
+      <button className="px-3 py-1 text-sm rounded-full hover:bg-gray-50" onClick={onReset}>Reset</button>
+      <Link href="/search" className="px-3 py-1 text-sm rounded-full bg-gray-900 text-white hover:bg-black">Browse Products</Link>
+    </div>
+  );
+}
+// No useEditor hook usage. We will capture the editor instance via onMount.
+
+export default function MoodboardEditorPage() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [insertFn, setInsertFn] = useState<((url: string, name?: string) => void) | null>(null);
+  const [editor, setEditor] = useState<any>(null);
+  useEffect(() => setMounted(true), []);
+
+  const computeAndInsert = useCallback(async (url: string, name?: string) => {
+    if (!editor) return;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    const dims = await new Promise<{ w: number; h: number }>((resolve) => {
+      img.onload = () => {
+        const maxW = 600;
+        const scale = Math.min(1, maxW / (img.naturalWidth || 1));
+        resolve({ w: Math.round((img.naturalWidth || 400) * scale), h: Math.round((img.naturalHeight || 300) * scale) });
+      };
+      img.onerror = () => resolve({ w: 400, h: 300 });
+      img.src = url;
+    });
+
+    // Create an image asset using the editor API
+    const created = editor.createAssets?.([
+      {
+        type: 'image',
+        src: url,
+        w: dims.w,
+        h: dims.h,
+        name: name || 'Image',
+      } as any,
+    ]) as any[] | undefined;
+    const assetId = created && created.length ? created[0].id : undefined;
+
+    const center = editor.getViewportPageCenter?.() ?? (() => {
+      const b = editor.getViewportPageBounds?.();
+      return { x: (b?.x ?? 0) + (b?.w ?? 0) / 2, y: (b?.y ?? 0) + (b?.h ?? 0) / 2 };
+    })();
+    const { x, y } = center;
+
+    // Create the image shape referencing the asset
+    editor.createShape?.({
+      type: 'image',
+      x: x - dims.w / 2,
+      y: y - dims.h / 2,
+      w: dims.w,
+      h: dims.h,
+      assetId,
+    } as any);
+  }, [editor]);
+
+  useEffect(() => {
+    if (editor) setInsertFn(() => computeAndInsert);
+  }, [editor, computeAndInsert]);
+
+  const handleExport = useCallback(async () => {
+    if (!editor) return;
+    const svg = await editor.getSvg?.();
+    if (!svg) return;
+    const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob((png) => {
+        if (!png) return;
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(png);
+        a.download = 'moodboard.png';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }, 'image/png');
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  }, [editor]);
+
+  const handleSave = useCallback(() => {
+    if (!editor) return;
+    let snapshot: unknown = null;
+    try {
+      const store: any = editor.store;
+      snapshot = store?.serialize?.() ?? store?.getSnapshot?.() ?? null;
+    } catch {}
+    try { localStorage.setItem('moodboard_snapshot', JSON.stringify(snapshot)); } catch {}
+  }, [editor]);
+
+  const handleLoad = useCallback(() => {
+    if (!editor) return;
+    try {
+      const raw = localStorage.getItem('moodboard_snapshot');
+      if (!raw) return;
+      const snapshot = JSON.parse(raw);
+      const store: any = editor.store;
+      store?.clear?.();
+      store?.loadSnapshot?.(snapshot);
+      if (!store?.loadSnapshot && store?.importSnapshot) { store.importSnapshot(snapshot); }
+    } catch {}
+  }, [editor]);
+
+  const handleClear = useCallback(() => {
+    if (!editor) return;
+    const store: any = editor.store;
+    store?.clear?.();
+  }, [editor]);
+
+  const handleReset = useCallback(() => {
+    try { localStorage.removeItem('moodboard_snapshot'); } catch {}
+    try { localStorage.removeItem('ngc-moodboard'); } catch {}
+    try {
+      const anyIndexed: any = indexedDB as any;
+      if (typeof anyIndexed.databases === 'function') {
+        anyIndexed.databases().then((dbs: any[]) => dbs.forEach((db: any) => { if (db?.name?.includes('tldraw')) anyIndexed.deleteDatabase(db.name); }));
+      } else if (typeof anyIndexed.deleteDatabase === 'function') {
+        anyIndexed.deleteDatabase('tldraw');
+        anyIndexed.deleteDatabase('ngc-moodboard');
+      }
+    } catch {}
+    if (editor) { const store: any = editor.store; store?.clear?.(); }
+  }, [editor]);
+
+  return (
+    <main className="h-[calc(100vh-var(--app-header-height))] bg-gray-50">
+      <div className="w-full h-full grid grid-cols-1 lg:grid-cols-[340px_1fr]">
+        {/* Library Sidebar */}
+        <aside className="border-r border-gray-200 bg-white flex flex-col min-h-0">
+          <div className="h-14 flex items-center justify-between px-4 border-b border-gray-200 bg-white/90 backdrop-blur z-20">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-gray-900 text-white text-xs font-bold">NGC</span>
+              <div>
+                <div className="text-sm font-semibold text-gray-900">Product Library</div>
+                <div className="text-xs text-gray-500">Search and add to canvas</div>
+              </div>
+            </div>
+            <Link href="/" className="text-xs font-medium text-gray-600 hover:text-gray-900">Home</Link>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <ProductLibrary onInsert={mounted && insertFn ? insertFn : undefined} disabled={!mounted || !insertFn} />
+          </div>
+        </aside>
+
+        {/* Canvas */}
+        <section ref={containerRef} className="relative bg-white min-h-0">
+          {/* Top header overlay */}
+          <div className="absolute inset-x-0 top-0 z-40">
+            <div className="bg-gradient-to-b from-white/95 to-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-b border-gray-200 shadow-sm">
+              <div className="px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+                <div className="flex items-baseline gap-3">
+                  <h1 className="text-base md:text-lg font-semibold text-gray-900">Moodboard Editor</h1>
+                  <span className="hidden md:inline text-xs text-gray-500">Design your space with products and templates</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {/* Zoom controls */}
+                  <button
+                    className="px-3 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-xs"
+                    onClick={() => { if (editor?.zoomOut) editor.zoomOut(); }}
+                  >
+                    Zoom -
+                  </button>
+                  <button
+                    className="px-3 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-xs"
+                    onClick={() => { if (editor?.zoomIn) editor.zoomIn(); }}
+                  >
+                    Zoom +
+                  </button>
+                  <button
+                    className="px-3 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-xs"
+                    onClick={() => { if (editor?.zoomToFit) editor.zoomToFit(); }}
+                  >
+                    Fit
+                  </button>
+                  <span className="mx-1 h-5 w-px bg-gray-300" />
+                  {/* File controls */}
+                  <button className="px-3 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-xs" onClick={handleExport}>Export</button>
+                  <button className="px-3 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-xs" onClick={handleSave}>Save</button>
+                  <button className="px-3 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-xs" onClick={handleLoad}>Load</button>
+                  <button className="px-3 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-xs" onClick={handleClear}>Clear</button>
+                  <button className="px-3 py-1.5 rounded-full border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs" onClick={handleReset}>Reset</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom status overlay */}
+          <div className="absolute inset-x-0 bottom-0 z-40">
+            <div className="bg-gradient-to-t from-white/95 to-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-t border-gray-200">
+              <div className="px-4 sm:px-6 lg:px-8 py-2 text-xs text-gray-600 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span>Tip: Scroll to zoom • Space+Drag to pan</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="hidden sm:inline">ESC deselect</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Canvas */}
+          <div className="pt-16 pb-12 h-full">
+            {mounted ? (
+              <Tldraw persistenceKey="ngc-moodboard" onMount={(ed: any) => setEditor(ed)} licenseKey={TLDRAW_LICENSE_KEY} />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-600">Loading editor…</div>
+            )}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}

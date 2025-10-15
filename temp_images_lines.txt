@@ -1,0 +1,11 @@
+image: string;
+image: "/images/products/farmtour.jpg",
+image: "/images/products/berrypicking.jpg",
+image: "/images/products/picnic.jpg",
+image: "/images/products/hayride.jpg",
+image: "/images/products/cider.jpg",
+image: "/images/products/farmhand.jpg",
+image: "/images/products/cheese_magic.jpg",
+image: "/images/products/basketweaving.jpg",
+image: "/images/products/breadbaking.jpg",
+image: "/images/products/pottery.jpg",
