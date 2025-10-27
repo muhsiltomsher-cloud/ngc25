@@ -82,8 +82,8 @@ export default function QuickViewModal({ product, brand, onClose }: QuickViewMod
           <FiX className="h-5 w-5" />
         </button>
 
-        <div className="relative w-full md:w-[60%] bg-slate-100">
-          <div className="relative h-[50vh] md:h-full w-full overflow-hidden">
+        <div className="relative w-full md:w-[60%] bg-slate-100 flex flex-col">
+          <div className="relative flex-1 w-full overflow-hidden">
             <Image
               src={currentImage}
               alt={selectedVariation?.name || product.name}
@@ -92,18 +92,20 @@ export default function QuickViewModal({ product, brand, onClose }: QuickViewMod
               sizes="(max-width: 768px) 100vw, 60vw"
               priority
             />
-            
-            {availableImages.length > 1 && (
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 p-3 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl max-h-[70vh] overflow-y-auto">
+          </div>
+          
+          {availableImages.length > 1 && (
+            <div className="bg-white/90 backdrop-blur-md p-4">
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
                 {availableImages.map((image, index) => (
                   <button
                     key={`${image}-${index}`}
                     type="button"
                     onClick={() => setActiveImageIndex(index)}
-                    className={`relative h-20 w-20 overflow-hidden rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+                    className={`flex-shrink-0 relative h-16 w-16 overflow-hidden rounded-lg border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
                       activeImageIndex === index 
                         ? "border-slate-900 shadow-lg scale-105" 
-                        : "border-slate-200/50 opacity-70 hover:opacity-100"
+                        : "border-slate-200 opacity-70 hover:opacity-100"
                     }`}
                   >
                     <Image
@@ -111,13 +113,13 @@ export default function QuickViewModal({ product, brand, onClose }: QuickViewMod
                       alt={`View ${index + 1}`}
                       fill
                       className="object-cover"
-                      sizes="80px"
+                      sizes="64px"
                     />
                   </button>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         <div className="relative w-full md:w-[40%] overflow-y-auto">
@@ -160,7 +162,7 @@ export default function QuickViewModal({ product, brand, onClose }: QuickViewMod
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-700">
                   Available Colors
                 </p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   {product.variations.map((variation) => (
                     <button
                       key={variation.id}
@@ -169,28 +171,28 @@ export default function QuickViewModal({ product, brand, onClose }: QuickViewMod
                         setSelectedVariation(variation);
                         setActiveImageIndex(0);
                       }}
-                      className={`group relative overflow-hidden rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+                      className={`group relative overflow-hidden rounded-lg border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
                         selectedVariation?.id === variation.id
                           ? "border-slate-900 shadow-lg"
                           : "border-slate-200 hover:border-slate-400"
                       }`}
                     >
-                      <div className="aspect-[4/3] relative">
+                      <div className="aspect-square relative">
                         <Image
                           src={variation.image}
                           alt={variation.name}
                           fill
                           className="object-cover"
-                          sizes="200px"
+                          sizes="120px"
                         />
                       </div>
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-                        <div className="flex items-center gap-2">
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                        <div className="flex items-center gap-1.5">
                           <span
-                            className="h-4 w-4 rounded-full border-2 border-white shadow-sm"
+                            className="h-3 w-3 rounded-full border border-white shadow-sm"
                             style={{ backgroundColor: variation.swatch ?? "#e5e7eb" }}
                           />
-                          <span className="text-xs font-medium text-white truncate">
+                          <span className="text-[10px] font-medium text-white truncate">
                             {variation.name}
                           </span>
                         </div>
