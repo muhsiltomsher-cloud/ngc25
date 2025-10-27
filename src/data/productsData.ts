@@ -1,4 +1,4 @@
-﻿﻿// src/data/productsData.ts
+﻿﻿﻿// src/data/productsData.ts
 
 export type ProductViewKey = 'installed' | 'room' | 'swatch';
 
@@ -53,6 +53,953 @@ export interface Product {
 }
 
 export const allProducts: Product[] = [
+  {
+    id: 'premium-luxury-collection',
+    name: 'Premium Luxury Collection - Designer Wallcovering',
+    image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+    gallery: [
+      'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+      'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+      'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+      'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+      'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+    ],
+    views: {
+      installed: [
+        'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+      ],
+      room: [
+        'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+      ],
+      swatch: [
+        'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1200&q=80',
+      ],
+    },
+    description: 'An exquisite designer wallcovering collection featuring premium materials and sophisticated textures. This luxury series offers an unprecedented range of 100 carefully curated color variations, each meticulously crafted to bring elegance and refinement to any interior space. Perfect for high-end residential and commercial projects.',
+    brandKey: 'armani-casa',
+    category: 'Designer Wallcovering',
+    segment: 'Luxury Hospitality',
+    subCategory: 'Premium Collection',
+    price: 1250,
+    currency: 'AED',
+    sku: 'PLC-DESIGNER-001',
+    availability: { type: 'items', quantity: 50 },
+    tags: ['luxury', 'designer', 'premium', 'collection', '100-colors'],
+    isFeatured: true,
+    rating: 4.9,
+    reviewCount: 127,
+    details: {
+      whatToBring: ['Professional installation recommended', 'Color matching service available'],
+    },
+    variations: [
+      {
+        id: 'crimson-red',
+        name: 'Crimson Red',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#DC143C',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'ruby-wine',
+        name: 'Ruby Wine',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#9B111E',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'scarlet-flame',
+        name: 'Scarlet Flame',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FF2400',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'cherry-blossom',
+        name: 'Cherry Blossom',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FFB7C5',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'burgundy-deep',
+        name: 'Burgundy Deep',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#800020',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'rose-petal',
+        name: 'Rose Petal',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FF66CC',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'coral-sunset',
+        name: 'Coral Sunset',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FF7F50',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'brick-red',
+        name: 'Brick Red',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#CB4154',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'terracotta',
+        name: 'Terracotta',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#E2725B',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'salmon-pink',
+        name: 'Salmon Pink',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FA8072',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'tangerine-dream',
+        name: 'Tangerine Dream',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FF9966',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'burnt-orange',
+        name: 'Burnt Orange',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#CC5500',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'apricot-glow',
+        name: 'Apricot Glow',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FBCEB1',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'amber-gold',
+        name: 'Amber Gold',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FFBF00',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'peach-cream',
+        name: 'Peach Cream',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FFE5B4',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'rust-orange',
+        name: 'Rust Orange',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#B7410E',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'copper-shine',
+        name: 'Copper Shine',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#B87333',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'mandarin',
+        name: 'Mandarin',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#F28500',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'pumpkin-spice',
+        name: 'Pumpkin Spice',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FF7518',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'marigold',
+        name: 'Marigold',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#EAA221',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'sunshine-yellow',
+        name: 'Sunshine Yellow',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FFD700',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'lemon-zest',
+        name: 'Lemon Zest',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FFF44F',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'canary-bright',
+        name: 'Canary Bright',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FFEF00',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'mustard-gold',
+        name: 'Mustard Gold',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FFDB58',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'honey-amber',
+        name: 'Honey Amber',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FFC30B',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'butter-cream',
+        name: 'Butter Cream',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FFFACD',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'golden-rod',
+        name: 'Golden Rod',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#DAA520',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'saffron',
+        name: 'Saffron',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#F4C430',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'champagne',
+        name: 'Champagne',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#F7E7CE',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'wheat-field',
+        name: 'Wheat Field',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#F5DEB3',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'emerald-forest',
+        name: 'Emerald Forest',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#50C878',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'jade-stone',
+        name: 'Jade Stone',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#00A86B',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'mint-fresh',
+        name: 'Mint Fresh',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#98FF98',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'sage-green',
+        name: 'Sage Green',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#9DC183',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'olive-grove',
+        name: 'Olive Grove',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#808000',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'forest-deep',
+        name: 'Forest Deep',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#228B22',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'lime-bright',
+        name: 'Lime Bright',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#32CD32',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'sea-foam',
+        name: 'Sea Foam',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#93E9BE',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'pine-needle',
+        name: 'Pine Needle',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#01796F',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'moss-garden',
+        name: 'Moss Garden',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#8A9A5B',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'ocean-deep',
+        name: 'Ocean Deep',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#006994',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'sky-azure',
+        name: 'Sky Azure',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#007FFF',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'navy-midnight',
+        name: 'Navy Midnight',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#000080',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'turquoise-wave',
+        name: 'Turquoise Wave',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#40E0D0',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'sapphire-blue',
+        name: 'Sapphire Blue',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#0F52BA',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'powder-blue',
+        name: 'Powder Blue',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#B0E0E6',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'cobalt-rich',
+        name: 'Cobalt Rich',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#0047AB',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'teal-lagoon',
+        name: 'Teal Lagoon',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#008080',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'cerulean-sky',
+        name: 'Cerulean Sky',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#007BA7',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'aquamarine',
+        name: 'Aquamarine',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#7FFFD4',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'royal-purple',
+        name: 'Royal Purple',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#7851A9',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'lavender-mist',
+        name: 'Lavender Mist',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#E6E6FA',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'violet-dream',
+        name: 'Violet Dream',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#8F00FF',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'plum-wine',
+        name: 'Plum Wine',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#8E4585',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'amethyst',
+        name: 'Amethyst',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#9966CC',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'lilac-soft',
+        name: 'Lilac Soft',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#C8A2C8',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'orchid-pink',
+        name: 'Orchid Pink',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#DA70D6',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'mauve-dusk',
+        name: 'Mauve Dusk',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#E0B0FF',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'indigo-night',
+        name: 'Indigo Night',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#4B0082',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'periwinkle',
+        name: 'Periwinkle',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#CCCCFF',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'chocolate-rich',
+        name: 'Chocolate Rich',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#7B3F00',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'caramel-swirl',
+        name: 'Caramel Swirl',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#C68E17',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'coffee-bean',
+        name: 'Coffee Bean',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#6F4E37',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'mocha-cream',
+        name: 'Mocha Cream',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#967969',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'chestnut',
+        name: 'Chestnut',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#954535',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'walnut-wood',
+        name: 'Walnut Wood',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#773F1A',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'tan-leather',
+        name: 'Tan Leather',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#D2B48C',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'sienna-earth',
+        name: 'Sienna Earth',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#A0522D',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'mahogany',
+        name: 'Mahogany',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#C04000',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'sepia-tone',
+        name: 'Sepia Tone',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#704214',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'charcoal-dark',
+        name: 'Charcoal Dark',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#36454F',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'silver-mist',
+        name: 'Silver Mist',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#C0C0C0',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'slate-gray',
+        name: 'Slate Gray',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#708090',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'ash-gray',
+        name: 'Ash Gray',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#B2BEB5',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'pewter-metal',
+        name: 'Pewter Metal',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#899499',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'dove-gray',
+        name: 'Dove Gray',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#6D6E71',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'graphite',
+        name: 'Graphite',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#383838',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'platinum',
+        name: 'Platinum',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#E5E4E2',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'steel-blue-gray',
+        name: 'Steel Blue Gray',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#71797E',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'smoke-gray',
+        name: 'Smoke Gray',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#738276',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'pure-white',
+        name: 'Pure White',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FFFFFF',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'ivory-cream',
+        name: 'Ivory Cream',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FFFFF0',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'beige-sand',
+        name: 'Beige Sand',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#F5F5DC',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'linen-natural',
+        name: 'Linen Natural',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#FAF0E6',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'eggshell',
+        name: 'Eggshell',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#F0EAD6',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'alabaster',
+        name: 'Alabaster',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#EDEADE',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'pearl-white',
+        name: 'Pearl White',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#EAE0C8',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'vanilla-cream',
+        name: 'Vanilla Cream',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#F3E5AB',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'bone-white',
+        name: 'Bone White',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#E3DAC9',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'coconut',
+        name: 'Coconut',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#F8F4E6',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'jet-black',
+        name: 'Jet Black',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#0A0A0A',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'onyx-deep',
+        name: 'Onyx Deep',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#353839',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'ebony-rich',
+        name: 'Ebony Rich',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#555D50',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'obsidian',
+        name: 'Obsidian',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#3B3C36',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'raven-black',
+        name: 'Raven Black',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#1C1C1C',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'carbon-black',
+        name: 'Carbon Black',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#2C2C2C',
+        gallery: [
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'midnight-black',
+        name: 'Midnight Black',
+        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#191970',
+        gallery: [
+          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'noir',
+        name: 'Noir',
+        image: 'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#000000',
+        gallery: [
+          'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'shadow-dark',
+        name: 'Shadow Dark',
+        image: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#1A1A1A',
+        gallery: [
+          'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+      {
+        id: 'eclipse',
+        name: 'Eclipse',
+        image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        swatch: '#242124',
+        gallery: [
+          'https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1600&q=80',
+        ],
+      },
+    ],
+    relatedProductIds: ['ac-skyline-panel', 'ac-emerald-cut', 'om-oase'],
+  },
   {
     id: 'ac-skyline-panel',
     name: 'Skyline Midnight Panel',
