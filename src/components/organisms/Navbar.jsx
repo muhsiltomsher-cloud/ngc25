@@ -68,6 +68,7 @@ const NAV_ITEMS = [
     name: "SOLUTIONS",
     dropdown: true,
     children: [
+      { name: "DIGITAL WALLCOVERINGS", href: "/solutions/digital-wallcoverings" },
       { name: "ACOUSTIC", href: "/solutions/acoustic" },
       { name: "CIRCON", href: "/solutions/circon" },
       { name: "TEXTILE WALL PANEL", href: "/solutions/textile-wall-panel" },
