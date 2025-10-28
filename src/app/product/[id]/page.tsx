@@ -98,7 +98,7 @@ export default function ProductDetailsPage() {
                   </div>
                 ) : null}
                 
-                <h1 className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-3xl font-bold leading-tight text-transparent md:text-4xl lg:text-5xl">
+                <h1 className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-2xl font-bold leading-snug text-transparent md:text-3xl lg:text-4xl">
                   {product.name}
                 </h1>
                 
@@ -126,7 +126,7 @@ export default function ProductDetailsPage() {
 
                 <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100/50 p-4">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-slate-900">{product.currency} {product.price.toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-slate-900">{product.currency} {product.price.toFixed(2)}</span>
                     <span className="text-sm text-slate-500">per unit</span>
                   </div>
                   <div className="h-8 w-px bg-slate-300"></div>
@@ -196,46 +196,6 @@ export default function ProductDetailsPage() {
                 ) : null}
               </div>
 
-              {product.variations?.length ? (
-                <div className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-xl shadow-slate-900/5">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-900">Color Options</h3>
-                      <p className="text-sm text-slate-600">
-                        {product.variations.length} variations available
-                      </p>
-                    </div>
-                    {selectedVariation && (
-                      <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
-                        <span
-                          className="h-6 w-6 rounded-full border-2 border-white shadow-md"
-                          style={{ backgroundColor: selectedVariation.swatch ?? '#e5e7eb' }}
-                        />
-                        <span className="text-sm font-semibold text-slate-900">{selectedVariation.name}</span>
-                      </div>
-                    )}
-                  </div>
-                  <VariationCarousel
-                    variations={product.variations}
-                    selectedId={selectedVariation?.id}
-                    onSelect={setSelectedVariation}
-                  />
-                  {product.variations.length > 12 && (
-                    <button
-                      type="button"
-                      onClick={() => setShowAllColors(true)}
-                      className="mt-4 w-full rounded-xl border-2 border-slate-200 bg-gradient-to-r from-white to-slate-50 px-4 py-3 text-sm font-bold text-slate-700 transition-all hover:border-slate-300 hover:shadow-md"
-                    >
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                        </svg>
-                        View All {product.variations.length} Colors
-                      </span>
-                    </button>
-                  )}
-                </div>
-              ) : null}
 
               <div className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-xl shadow-slate-900/5">
                 <h3 className="mb-4 text-lg font-bold text-slate-900">Share This Product</h3>
@@ -245,10 +205,55 @@ export default function ProductDetailsPage() {
           </div>
         </div>
 
+        {product.variations?.length ? (
+          <section className="mt-16">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">Color Options</h2>
+                <p className="mt-1 text-base text-slate-600">
+                  {product.variations.length} variations available
+                </p>
+              </div>
+              {selectedVariation && (
+                <div className="flex items-center gap-3 rounded-lg bg-slate-50 px-4 py-3 shadow-sm">
+                  <span
+                    className="h-8 w-8 rounded-full border-2 border-white shadow"
+                    style={{ backgroundColor: selectedVariation.swatch ?? '#e5e7eb' }}
+                  />
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Selected Shade</p>
+                    <p className="text-sm font-semibold text-slate-900">{selectedVariation.name}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-xl shadow-slate-900/5">
+              <VariationCarousel
+                variations={product.variations}
+                selectedId={selectedVariation?.id}
+                onSelect={setSelectedVariation}
+              />
+            </div>
+            {product.variations.length > 12 && (
+              <button
+                type="button"
+                onClick={() => setShowAllColors(true)}
+                className="mt-6 w-full rounded-xl border-2 border-slate-200 bg-gradient-to-r from-white to-slate-50 px-4 py-3 text-sm font-bold text-slate-700 transition-all hover:border-slate-300 hover:shadow-md"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                  </svg>
+                  View All {product.variations.length} Colors
+                </span>
+              </button>
+            )}
+          </section>
+        ) : null}
         {otherVariations.length ? (
           <section className="mt-16">
             <div className="mb-6 text-center">
-              <h2 className="text-3xl font-bold text-slate-900">Explore More Colors</h2>
+              <h2 className="text-2xl font-bold text-slate-900">Explore More Colors</h2>
               <p className="mt-2 text-base text-slate-600">Discover additional colorways of this exquisite design</p>
               <div className="mx-auto mt-4 h-1 w-24 rounded-full bg-gradient-to-r from-slate-300 via-slate-400 to-slate-300"></div>
             </div>
@@ -265,7 +270,7 @@ export default function ProductDetailsPage() {
         {relatedProducts.length ? (
           <section className="mt-20">
             <div className="mb-6 text-center">
-              <h2 className="text-3xl font-bold text-slate-900">You May Also Like</h2>
+              <h2 className="text-2xl font-bold text-slate-900">You May Also Like</h2>
               <p className="mt-2 text-base text-slate-600">Handpicked recommendations just for you</p>
               <div className="mx-auto mt-4 h-1 w-24 rounded-full bg-gradient-to-r from-slate-300 via-slate-400 to-slate-300"></div>
             </div>
@@ -276,7 +281,7 @@ export default function ProductDetailsPage() {
         {sameCollection.length ? (
           <section className="mt-20 pb-12">
             <div className="mb-6 text-center">
-              <h2 className="text-3xl font-bold text-slate-900">From The Same Collection</h2>
+              <h2 className="text-2xl font-bold text-slate-900">From The Same Collection</h2>
               <p className="mt-2 text-base text-slate-600">
                 More stunning pieces from {brand?.title ?? product.brandKey} in {product.subCategory}
               </p>

@@ -25,15 +25,15 @@ export default function ProductCarousel({ products }: ProductCarouselProps) {
         520: { slidesPerView: 2 },
         768: { slidesPerView: 3 },
         1024: { slidesPerView: 4 },
+        1280: { slidesPerView: 6 },
       }}
       className="!px-1"
     >
-      {products.map(p => (
-        <SwiperSlide key={p.id} className="!h-auto">
-          <ProductCard product={p} />
+      {products.map((product) => (
+        <SwiperSlide key={product.id} className="!h-auto">
+          <ProductCard product={product} />
         </SwiperSlide>
       ))}
     </Swiper>
   );
 }
-
