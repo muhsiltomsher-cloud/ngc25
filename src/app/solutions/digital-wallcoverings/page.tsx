@@ -173,34 +173,34 @@ function StickyScrollSection() {
             return Math.max(leftHeight, rightHeight);
           };
 
-          ScrollTrigger.create({
+          const commonConfig = {
             trigger: wrapperRef.current,
             start: 'top top+=100',
             end: () => `+=${Math.max(0, getMaxHeight() - window.innerHeight + 300)}`,
-            pin: centerRef.current,
-            pinSpacing: true,
             invalidateOnRefresh: true,
+            anticipatePin: 1,
+          };
+
+          ScrollTrigger.create({
+            ...commonConfig,
+            pin: leftRef.current,
+            pinSpacing: true,
           });
 
-          gsap.to(leftRef.current, {
-            y: -80,
+          ScrollTrigger.create({
+            ...commonConfig,
+            pin: rightRef.current,
+            pinSpacing: false,
+          });
+
+          gsap.to(centerRef.current, {
+            y: -40,
             ease: 'none',
             scrollTrigger: {
               trigger: wrapperRef.current,
-              start: 'top top',
+              start: 'top top+=100',
               end: () => `+=${getMaxHeight()}`,
-              scrub: 1,
-            },
-          });
-
-          gsap.to(rightRef.current, {
-            y: 80,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: wrapperRef.current,
-              start: 'top top',
-              end: () => `+=${getMaxHeight()}`,
-              scrub: 1,
+              scrub: true,
             },
           });
         },
@@ -209,6 +209,10 @@ function StickyScrollSection() {
         },
       });
 
+      if (typeof window !== 'undefined') {
+        window.addEventListener('load', () => ScrollTrigger.refresh(), { once: true });
+      }
+      
       setTimeout(() => {
         ScrollTrigger.refresh();
       }, 300);
