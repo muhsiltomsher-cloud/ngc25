@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useVoiceSearch } from '@/hooks/useVoiceSearch';
+import { useLocalRecorder } from '@/hooks/useLocalRecorder';
 
 interface VoiceSearchModalProps {
   isOpen: boolean;
@@ -9,44 +10,64 @@ interface VoiceSearchModalProps {
   onSubmit: (query: string) => void;
 }
 
+type ModalMode = 'voice-search' | 'local-recording';
+
 export default function VoiceSearchModal({ isOpen, onClose, onSubmit }: VoiceSearchModalProps) {
+  const [mode, setMode] = useState<ModalMode>('voice-search');
+  
   const {
     isListening,
     transcript,
     interimTranscript,
-    error,
-    isSupported,
+    error: voiceError,
+    isSupported: voiceSupported,
     startListening,
     stopListening,
     resetTranscript,
   } = useVoiceSearch();
 
+  const {
+    isRecording,
+    isPaused,
+    audioURL,
+    audioBlob,
+    duration,
+    error: recordError,
+    isSupported: recordSupported,
+    startRecording,
+    stopRecording,
+    pauseRecording,
+    resumeRecording,
+    clearRecording,
+  } = useLocalRecorder();
+
   const modalRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
-    if (isOpen && isSupported) {
-      startListening();
+    if (isOpen) {
       document.body.style.overflow = 'hidden';
     }
 
     return () => {
       document.body.style.overflow = '';
       stopListening();
+      if (isRecording) {
+        stopRecording();
+      }
     };
-  }, [isOpen, isSupported, startListening, stopListening]);
+  }, [isOpen, stopListening, isRecording, stopRecording]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
-        stopListening();
-        resetTranscript();
-        onClose();
+        handleClose();
       }
     };
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, stopListening, resetTranscript, onClose]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && modalRef.current) {
@@ -63,10 +84,14 @@ export default function VoiceSearchModal({ isOpen, onClose, onSubmit }: VoiceSea
   const handleClose = () => {
     stopListening();
     resetTranscript();
+    if (isRecording) {
+      stopRecording();
+    }
+    clearRecording();
     onClose();
   };
 
-  const handleUseQuery = () => {
+  const handleVoiceSubmit = () => {
     const finalQuery = transcript.trim();
     if (finalQuery) {
       onSubmit(finalQuery);
@@ -74,23 +99,43 @@ export default function VoiceSearchModal({ isOpen, onClose, onSubmit }: VoiceSea
     }
   };
 
-  const handleClear = () => {
+  const handleClearVoice = () => {
     resetTranscript();
     if (!isListening) {
       startListening();
     }
   };
 
+  const handleDownload = () => {
+    if (audioBlob) {
+      const url = URL.createObjectURL(audioBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `voice-recording-${Date.now()}.webm`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   if (!isOpen) return null;
 
   const displayText = transcript + interimTranscript;
+  const currentError = mode === 'voice-search' ? voiceError : recordError;
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="voice-search-title"
+      aria-labelledby="voice-modal-title"
     >
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -112,7 +157,33 @@ export default function VoiceSearchModal({ isOpen, onClose, onSubmit }: VoiceSea
           </svg>
         </button>
 
-        <div className="flex flex-col items-center space-y-6">
+        {/* Mode Tabs */}
+        <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-full">
+          <button
+            onClick={() => setMode('voice-search')}
+            className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              mode === 'voice-search'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Voice Search
+          </button>
+          <button
+            onClick={() => setMode('local-recording')}
+            className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              mode === 'local-recording'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Record Locally
+          </button>
+        </div>
+
+        {/* Voice Search Mode */}
+        {mode === 'voice-search' && (
+          <div className="flex flex-col items-center space-y-6">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-br from-amber-400/20 to-orange-500/20 rounded-full blur-3xl animate-pulse" />
             
@@ -153,15 +224,15 @@ export default function VoiceSearchModal({ isOpen, onClose, onSubmit }: VoiceSea
           </div>
 
           <div className="text-center space-y-2">
-            <h2 id="voice-search-title" className="text-2xl font-semibold text-gray-900">
-              {isListening ? 'Speak now' : error ? 'Error' : 'Ready'}
+            <h2 id="voice-modal-title" className="text-2xl font-semibold text-gray-900">
+              {isListening ? 'Speak now' : currentError ? 'Error' : 'Ready'}
             </h2>
             <p className="text-sm text-gray-600">
               {isListening 
                 ? "We're listening..." 
-                : error 
-                ? error 
-                : !isSupported 
+                : currentError 
+                ? currentError 
+                : !voiceSupported 
                 ? 'Voice search is not supported in your browser' 
                 : 'Click start to begin'}
             </p>
@@ -178,7 +249,7 @@ export default function VoiceSearchModal({ isOpen, onClose, onSubmit }: VoiceSea
             </div>
           )}
 
-          {!displayText && !error && (
+          {!displayText && !currentError && (
             <div className="text-center text-sm text-gray-500 space-y-1">
               <p>Try saying:</p>
               <p className="text-gray-400">&ldquo;Herringbone floor tiles&rdquo;</p>
@@ -199,20 +270,20 @@ export default function VoiceSearchModal({ isOpen, onClose, onSubmit }: VoiceSea
                 {transcript && (
                   <>
                     <button
-                      onClick={handleClear}
+                      onClick={handleClearVoice}
                       className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full font-medium transition-colors"
                     >
                       Clear
                     </button>
                     <button
-                      onClick={handleUseQuery}
+                      onClick={handleVoiceSubmit}
                       className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-full font-medium transition-all shadow-lg shadow-orange-500/30"
                     >
                       Search
                     </button>
                   </>
                 )}
-                {!transcript && !error && isSupported && (
+                {!transcript && !currentError && voiceSupported && (
                   <button
                     onClick={startListening}
                     className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-full font-medium transition-all shadow-lg shadow-orange-500/30"
@@ -220,7 +291,7 @@ export default function VoiceSearchModal({ isOpen, onClose, onSubmit }: VoiceSea
                     Start Listening
                   </button>
                 )}
-                {error && (
+                {currentError && (
                   <button
                     onClick={() => {
                       resetTranscript();
@@ -235,6 +306,141 @@ export default function VoiceSearchModal({ isOpen, onClose, onSubmit }: VoiceSea
             )}
           </div>
         </div>
+        )}
+
+        {/* Local Recording Mode */}
+        {mode === 'local-recording' && (
+          <div className="flex flex-col items-center space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-semibold text-gray-900">
+                {isRecording ? (isPaused ? 'Paused' : 'Recording') : audioURL ? 'Recording Complete' : 'Ready to Record'}
+              </h2>
+              <p className="text-xs text-gray-500">
+                Saved only in your browser - no upload
+              </p>
+            </div>
+
+            <div className="relative">
+              <div className={`relative w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 ${
+                isRecording && !isPaused
+                  ? 'bg-gradient-to-br from-red-400 to-red-600 shadow-lg shadow-red-500/50 scale-110' 
+                  : isPaused
+                  ? 'bg-gradient-to-br from-yellow-400 to-yellow-600'
+                  : 'bg-gradient-to-br from-gray-300 to-gray-400'
+              }`}>
+                {isRecording ? (
+                  <div className="w-6 h-6 bg-white rounded-sm"></div>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="40"
+                    height="40"
+                    viewBox="0 0 24 24"
+                    fill="white"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10"></circle>
+                  </svg>
+                )}
+              </div>
+
+              {isRecording && !isPaused && (
+                <>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-32 h-32 rounded-full border-2 border-red-400/30 animate-ping" />
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-40 h-40 rounded-full border-2 border-red-500/20 animate-ping animation-delay-300" />
+                  </div>
+                </>
+              )}
+            </div>
+
+            {isRecording && (
+              <div className="text-center">
+                <div className="text-4xl font-mono font-bold text-gray-900">
+                  {formatDuration(duration)}
+                </div>
+              </div>
+            )}
+
+            {currentError && (
+              <div className="w-full p-4 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-sm text-red-600">{currentError}</p>
+              </div>
+            )}
+
+            {audioURL && (
+              <div className="w-full space-y-3">
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <audio
+                    ref={audioRef}
+                    src={audioURL}
+                    controls
+                    className="w-full"
+                  />
+                </div>
+                <div className="text-center text-sm text-gray-600">
+                  Duration: {formatDuration(duration)}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3 w-full pt-4">
+              {isRecording ? (
+                <>
+                  {!isPaused ? (
+                    <button
+                      onClick={pauseRecording}
+                      className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-full font-medium transition-colors"
+                    >
+                      Pause
+                    </button>
+                  ) : (
+                    <button
+                      onClick={resumeRecording}
+                      className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-full font-medium transition-colors"
+                    >
+                      Resume
+                    </button>
+                  )}
+                  <button
+                    onClick={stopRecording}
+                    className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-full font-medium transition-colors shadow-lg shadow-red-500/30"
+                  >
+                    Stop Recording
+                  </button>
+                </>
+              ) : audioURL ? (
+                <>
+                  <button
+                    onClick={clearRecording}
+                    className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full font-medium transition-colors"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    onClick={handleDownload}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full font-medium transition-all shadow-lg shadow-blue-500/30"
+                  >
+                    Download
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={startRecording}
+                  disabled={!recordSupported}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-full font-medium transition-all shadow-lg shadow-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {recordSupported ? 'Start Recording' : 'Not Supported'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <style jsx>{`
