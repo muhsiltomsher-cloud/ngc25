@@ -15,15 +15,70 @@ const HeroSection = () => {
   const [query, setQuery] = useState('');
   const fileRef = useRef(null);
   const router = useRouter();
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsMounted(true), 100);
-    return () => clearTimeout(timer); // Cleanup the timer
+    return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setQuery(transcript);
+        setIsListening(false);
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, []);
+
+  const handleVoiceButtonClick = () => {
+    if (!recognitionRef.current) {
+      alert('Voice search is not supported in your browser. Please use Chrome, Edge, or Safari.');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (error) {
+        console.error('Error starting speech recognition:', error);
+        setIsListening(false);
+      }
+    }
+  };
 
   return (
     <section
-      className="relative min-h-screen flex items-end" // min-h-screen ensures enough height for the section
+      className="relative min-h-screen flex items-end"
       style={{
         backgroundImage: "url('/images/banenr.avif')",
         backgroundSize: "cover",
@@ -31,26 +86,21 @@ const HeroSection = () => {
         backgroundRepeat: "no-repeat",
       }}
     >
-      {/* Overlay with a gradient for better text visibility */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
 
-      {/* Content container with bottom padding adjustments */}
-      <Container className="relative z-10 max-w-2xl mx-auto text-left px-4 md:px-0 pb-36 md:pb-48"> {/* Increased padding bottom */}
-        {/* Animated text content wrapper */}
+      <Container className="relative z-10 max-w-2xl mx-auto text-left px-4 md:px-0 pb-36 md:pb-48">
         <div
           className={`transition-all duration-1000 ease-out max-w-2xl ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}
         >
           <h1 className="text-4xl md:text-6xl font-bold mb-4 text-white drop-shadow-lg leading-tight">
             We help<br />redefine spaces
           </h1>
-          <p className="text-lg md:text-2xl text-white/90 font-normal drop-shadow-md mb-8"> {/* Increased bottom margin */}
+          <p className="text-lg md:text-2xl text-white/90 font-normal drop-shadow-md mb-8">
             At NGC Walls&nbsp;|&nbsp;Floors&nbsp;|&nbsp;Fabrics, every detail matters. From textures to finishes, we curate high-quality materials that bring precision, elegance, and excellence to every project.
           </p>
           
-          {/* --- SEARCH BAR START --- */}
           <div className="relative w-full">
             <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-              {/* Optional: Add search icon on the left if desired */}
             </div>
             <form
               onSubmit={(e) => {
@@ -71,7 +121,6 @@ const HeroSection = () => {
               />
             </form>
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-              {/* Image Search Icon */}
               <input
                 ref={fileRef}
                 type="file"
@@ -104,7 +153,20 @@ const HeroSection = () => {
                     <polyline points="21 15 16 10 5 21"></polyline>
                 </svg>
               </button>
-              {/* Search Icon */}
+              <button
+                type="button"
+                onClick={handleVoiceButtonClick}
+                className={`p-2 focus:outline-none transition-colors ${isListening ? 'text-red-500 animate-pulse' : 'text-gray-300 hover:text-white'}`}
+                aria-label="Voice search"
+                title={isListening ? 'Listening... Click to stop' : 'Voice search'}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                  <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+              </button>
               <button
                 type="button"
                 onClick={() => {
