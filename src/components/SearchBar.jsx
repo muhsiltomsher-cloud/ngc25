@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { allProducts } from '../data/productsData';
+import VoiceSearchModal from './ui/VoiceSearchModal';
 
 /**
  * Reusable search bar with text, image, and voice search actions.
@@ -23,8 +24,7 @@ export default function SearchBar({
   const [query, setQuery] = useState(initialQuery);
   const fileInputRef = useRef(null);
   const rootRef = useRef(null);
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef(null);
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
 
   const [isOpen, setIsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
@@ -32,39 +32,6 @@ export default function SearchBar({
   useEffect(() => {
     setQuery(initialQuery);
   }, [initialQuery]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US';
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setQuery(transcript);
-        setIsListening(false);
-      };
-
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
-    }
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
-  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -81,23 +48,12 @@ export default function SearchBar({
   };
 
   const handleVoiceButtonClick = () => {
-    if (!recognitionRef.current) {
-      alert('Voice search is not supported in your browser. Please use Chrome, Edge, or Safari.');
-      return;
-    }
+    setIsVoiceModalOpen(true);
+  };
 
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      try {
-        recognitionRef.current.start();
-        setIsListening(true);
-      } catch (error) {
-        console.error('Error starting speech recognition:', error);
-        setIsListening(false);
-      }
-    }
+  const handleVoiceSubmit = (voiceQuery) => {
+    setQuery(voiceQuery);
+    onTextSearch && onTextSearch(voiceQuery);
   };
 
   const handleFileChange = (e) => {
@@ -180,9 +136,9 @@ export default function SearchBar({
           <button
             type="button"
             onClick={handleVoiceButtonClick}
-            className={`p-2 focus:outline-none transition-colors ${isListening ? 'text-red-500 animate-pulse' : 'text-gray-300 hover:text-white'}`}
+            className="p-2 text-gray-300 hover:text-white focus:outline-none transition-colors"
             aria-label="Voice search"
-            title={isListening ? 'Listening... Click to stop' : 'Voice search'}
+            title="Voice search"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
@@ -240,6 +196,12 @@ export default function SearchBar({
           </div>
         </div>
       )}
+
+      <VoiceSearchModal
+        isOpen={isVoiceModalOpen}
+        onClose={() => setIsVoiceModalOpen(false)}
+        onSubmit={handleVoiceSubmit}
+      />
     </div>
   );
 }

@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import VoiceSearchModal from '@/components/ui/VoiceSearchModal';
 
-// Using the Container component definition you provided, making it responsive.
 const Container = ({ children, className = '' }) => (
   <div className={` px-4 w-full max-w-[1400px] ${className}`}>
     {children}
@@ -15,65 +15,22 @@ const HeroSection = () => {
   const [query, setQuery] = useState('');
   const fileRef = useRef(null);
   const router = useRouter();
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef(null);
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsMounted(true), 100);
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US';
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setQuery(transcript);
-        setIsListening(false);
-      };
-
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
-    }
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
-  }, []);
-
   const handleVoiceButtonClick = () => {
-    if (!recognitionRef.current) {
-      alert('Voice search is not supported in your browser. Please use Chrome, Edge, or Safari.');
-      return;
-    }
+    setIsVoiceModalOpen(true);
+  };
 
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      try {
-        recognitionRef.current.start();
-        setIsListening(true);
-      } catch (error) {
-        console.error('Error starting speech recognition:', error);
-        setIsListening(false);
-      }
-    }
+  const handleVoiceSubmit = (voiceQuery) => {
+    setQuery(voiceQuery);
+    const params = new URLSearchParams();
+    if (voiceQuery) params.set('q', voiceQuery);
+    router.push(`/search${params.toString() ? `?${params.toString()}` : ''}`);
   };
 
   return (
@@ -156,9 +113,9 @@ const HeroSection = () => {
               <button
                 type="button"
                 onClick={handleVoiceButtonClick}
-                className={`p-2 focus:outline-none transition-colors ${isListening ? 'text-red-500 animate-pulse' : 'text-gray-300 hover:text-white'}`}
+                className="p-2 text-gray-300 hover:text-white focus:outline-none transition-colors"
                 aria-label="Voice search"
-                title={isListening ? 'Listening... Click to stop' : 'Voice search'}
+                title="Voice search"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
@@ -185,10 +142,15 @@ const HeroSection = () => {
               </button>
             </div>
           </div>
-          {/* --- SEARCH BAR END --- */}
 
         </div>
       </Container>
+
+      <VoiceSearchModal
+        isOpen={isVoiceModalOpen}
+        onClose={() => setIsVoiceModalOpen(false)}
+        onSubmit={handleVoiceSubmit}
+      />
     </section>
   );
 };
