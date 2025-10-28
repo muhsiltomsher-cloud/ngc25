@@ -1,8 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 const Container = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
   <div className={`px-4 w-full max-w-[1400px] mx-auto ${className}`}>
@@ -146,6 +152,113 @@ function FeatureCard({ feature }: { feature: typeof FEATURES[0] }) {
   );
 }
 
+function StickyScrollSection() {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const centerRef = useRef<HTMLDivElement>(null);
+  const leftRef = useRef<HTMLDivElement>(null);
+  const rightRef = useRef<HTMLDivElement>(null);
+
+  const leftCategories = CATEGORIES.slice(0, 3);
+  const rightCategories = CATEGORIES.slice(3, 6);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const ctx = gsap.context(() => {
+      ScrollTrigger.matchMedia({
+        '(min-width: 1024px)': () => {
+          const getMaxHeight = () => {
+            const leftHeight = leftRef.current?.scrollHeight || 0;
+            const rightHeight = rightRef.current?.scrollHeight || 0;
+            return Math.max(leftHeight, rightHeight);
+          };
+
+          ScrollTrigger.create({
+            trigger: wrapperRef.current,
+            start: 'top top+=100',
+            end: () => `+=${Math.max(0, getMaxHeight() - window.innerHeight + 300)}`,
+            pin: centerRef.current,
+            pinSpacing: true,
+            invalidateOnRefresh: true,
+          });
+
+          gsap.to(leftRef.current, {
+            y: -80,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: wrapperRef.current,
+              start: 'top top',
+              end: () => `+=${getMaxHeight()}`,
+              scrub: 1,
+            },
+          });
+
+          gsap.to(rightRef.current, {
+            y: 80,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: wrapperRef.current,
+              start: 'top top',
+              end: () => `+=${getMaxHeight()}`,
+              scrub: 1,
+            },
+          });
+        },
+        '(prefers-reduced-motion: reduce)': () => {
+          ScrollTrigger.getAll().forEach((t) => t.disable());
+        },
+      });
+
+      setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 300);
+    }, wrapperRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section ref={wrapperRef} className="relative py-20 bg-white overflow-hidden">
+      <Container>
+        <div className="hidden lg:grid lg:grid-cols-[1fr_auto_1fr] gap-8 items-start">
+          <div ref={leftRef} className="flex flex-col gap-8 will-change-transform">
+            {leftCategories.map((category) => (
+              <CategoryCard key={category.id} category={category} />
+            ))}
+          </div>
+
+          <div ref={centerRef} className="mx-8 text-center w-[min(520px,80vw)] self-start">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
+              CUSTOM WALLCOVERINGS
+            </h2>
+            <p className="text-xl text-gray-600">Bring creativity to your walls</p>
+          </div>
+
+          <div ref={rightRef} className="flex flex-col gap-8 will-change-transform">
+            {rightCategories.map((category) => (
+              <CategoryCard key={category.id} category={category} />
+            ))}
+          </div>
+        </div>
+
+        <div className="lg:hidden">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
+              CUSTOM WALLCOVERINGS
+            </h2>
+            <p className="text-xl text-gray-600">Bring creativity to your walls</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {CATEGORIES.map((category) => (
+              <CategoryCard key={category.id} category={category} />
+            ))}
+          </div>
+        </div>
+      </Container>
+    </section>
+  );
+}
+
 export default function DigitalWallcoveringsPage() {
   return (
     <main className="min-h-screen bg-white">
@@ -187,22 +300,7 @@ export default function DigitalWallcoveringsPage() {
         </Container>
       </section>
 
-      <section className="py-20 bg-white">
-        <Container>
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
-              CUSTOM WALLCOVERINGS
-            </h2>
-            <p className="text-xl text-gray-600">Bring creativity to your walls</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {CATEGORIES.map((category) => (
-              <CategoryCard key={category.id} category={category} />
-            ))}
-          </div>
-        </Container>
-      </section>
+      <StickyScrollSection />
 
       <section className="py-20 bg-gray-50">
         <Container>
