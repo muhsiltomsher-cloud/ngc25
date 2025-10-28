@@ -216,7 +216,7 @@ function MoodboardEditorInner() {
 
 
 
-    
+
     const container = boardRef.current; const cw = container?.clientWidth ?? 1200; const ch = container?.clientHeight ?? 800;
     const centerX = (cw / 2 - dims.w / 2) / (scale || 1); const centerY = (ch / 2 - dims.h / 2) / (scale || 1);
     setItems((prev) => {
@@ -414,7 +414,7 @@ function MoodboardEditorInner() {
               />
             </div>
 
-            {/* Wall & Floor Design Controls */
+            {/* Wall & Floor Design Controls */}
             <div className="p-3 border-b border-gray-200 bg-white/70 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="text-sm font-semibold text-gray-900">Wall & Floor</div>
@@ -582,7 +582,7 @@ function MoodboardEditorInner() {
                 ) : null}
                 {/* Background room image */}
                 <div className="absolute inset-0" style={{ backgroundImage: background.url ? `url(${background.url})` : undefined, backgroundSize: background.fit || 'cover', backgroundPosition: 'center', transform: `scale(${scale})`, transformOrigin: 'center center' }} />
-                {/* Wall/Floor overlays */
+                {/* Wall/Floor overlays */}
                 {(() => {
                   const wallHeight = `${horizon}%`;
                   const floorTop = `${horizon}%`;
