@@ -1,6 +1,7 @@
-const defaultTheme = require('tailwindcss/defaultTheme');
+import defaultTheme from 'tailwindcss/defaultTheme';
+import forms from '@tailwindcss/forms';
 
-module.exports = {
+const config = {
   content: [
     './src/app/**/*.{js,ts,jsx,tsx}',
     './src/components/**/*.{js,ts,jsx,tsx}',
@@ -36,6 +37,8 @@ module.exports = {
     },
   },
   plugins: [
-    require('@tailwindcss/forms'), // Add the plugin here
+    forms, // Add the plugin here
   ],
 };
+
+export default config;
