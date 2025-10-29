@@ -45,13 +45,15 @@ const PolotnoEditor: React.FC<PolotnoEditorProps> = observer(({ initialData }) =
           const page = newStore.activePage;
           
           if (page && template.zones) {
+            const pageWidth = Number(page.width);
+            const pageHeight = Number(page.height);
             template.zones.forEach((zone: any) => {
               page.addElement({
                 type: 'text',
-                x: (zone.x / 100) * page.width,
-                y: (zone.y / 100) * page.height,
-                width: (zone.width / 100) * page.width,
-                height: (zone.height / 100) * page.height,
+                x: (zone.x / 100) * pageWidth,
+                y: (zone.y / 100) * pageHeight,
+                width: (zone.width / 100) * pageWidth,
+                height: (zone.height / 100) * pageHeight,
                 text: zone.label,
                 fontSize: 16,
                 fill: '#666666',
@@ -69,8 +71,8 @@ const PolotnoEditor: React.FC<PolotnoEditorProps> = observer(({ initialData }) =
               src: uploadedRoomImage,
               x: 0,
               y: 0,
-              width: page.width,
-              height: page.height,
+              width: Number(page.width),
+              height: Number(page.height),
               selectable: false,
             });
           }

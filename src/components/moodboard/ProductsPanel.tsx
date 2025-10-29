@@ -110,26 +110,33 @@ ProductsPanel.displayName = 'ProductsPanel';
 
 export const ProductsSection = {
   name: 'products',
-  Tab: (props: any) => (
-    <div style={{ padding: '10px', cursor: 'pointer' }} {...props}>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+  Tab: (props: any) => {
+    const { active, ...rest } = props;
+    return (
+      <div 
+        style={{ padding: '10px', cursor: 'pointer' }} 
+        {...rest}
+        className={active ? 'bp5-tab bp5-active' : 'bp5-tab'}
       >
-        <rect x="3" y="3" width="7" height="7"></rect>
-        <rect x="14" y="3" width="7" height="7"></rect>
-        <rect x="14" y="14" width="7" height="7"></rect>
-        <rect x="3" y="14" width="7" height="7"></rect>
-      </svg>
-      <div style={{ marginTop: '5px', fontSize: '12px' }}>Products</div>
-    </div>
-  ),
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <div style={{ marginTop: '5px', fontSize: '12px' }}>Products</div>
+      </div>
+    );
+  },
   Panel: ProductsPanel,
 };
