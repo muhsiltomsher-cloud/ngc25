@@ -5,6 +5,7 @@ import Navbar from '@/components/organisms/Navbar';
 import Footer from '@/components/organisms/Footer';
 import SmoothScroll from '@/app/SmoothScroll';
 import './globals.css';
+import '@blueprintjs/core/lib/css/blueprint.css';
 
 
 // Load your BODY font (e.g., Helvetica Neue)
