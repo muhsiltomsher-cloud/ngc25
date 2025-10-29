@@ -3,17 +3,14 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { createStore } from 'polotno/model/store';
-import { unstable_setAnimationsEnabled } from 'polotno/config';
 import { allProducts } from '@/data/productsData';
-
-unstable_setAnimationsEnabled(false);
 
 const Workspace = dynamic(
   () => import('@/lib/polotno-workspace').then((mod) => mod.Workspace),
   { ssr: false }
 );
 
-export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 
 export default function MoodboardEditorPage() {
   const [store] = useState(() =>
@@ -23,6 +20,12 @@ export default function MoodboardEditorPage() {
     })
   );
   const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    import('polotno/config').then(({ unstable_setAnimationsEnabled }) => {
+      unstable_setAnimationsEnabled(false);
+    });
+  }, []);
   const [activeTab, setActiveTab] = useState<'templates' | 'products' | 'text' | 'shapes' | 'upload'>('templates');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
