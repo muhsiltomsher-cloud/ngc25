@@ -1,35 +1,45 @@
-import ReactDOM from 'react-dom';
-import { createRoot } from 'react-dom/client';
+import * as React from 'react';
+import { createRoot, type Root } from 'react-dom/client';
 
-// @ts-ignore
-if (typeof ReactDOM.render === 'undefined') {
-  // @ts-ignore
-  ReactDOM.render = (element: React.ReactElement, container: Element, callback?: () => void) => {
-    const root = createRoot(container);
-    root.render(element);
-    if (callback) {
-      setTimeout(callback, 0);
-    }
-  };
+const roots = new WeakMap<Element | DocumentFragment, Root>();
+
+export function render(
+  element: React.ReactNode,
+  container: Element | DocumentFragment,
+  callback?: () => void
+): void {
+  let root = roots.get(container);
+  if (!root) {
+    root = createRoot(container as Element);
+    roots.set(container, root);
+  }
+  root.render(element as React.ReactElement);
+  if (callback) Promise.resolve().then(callback);
 }
 
-// @ts-ignore
-if (typeof ReactDOM.unmountComponentAtNode === 'undefined') {
-  // @ts-ignore
-  ReactDOM.unmountComponentAtNode = (container: Element) => {
-    if (container) {
-      container.innerHTML = '';
-    }
+export function unmountComponentAtNode(
+  container: Element | DocumentFragment
+): boolean {
+  const root = roots.get(container);
+  if (root) {
+    root.unmount();
+    roots.delete(container);
     return true;
-  };
+  }
+  if (container instanceof Element) {
+    container.innerHTML = '';
+  }
+  return true;
 }
 
-// @ts-ignore
-if (typeof ReactDOM.findDOMNode === 'undefined') {
-  // @ts-ignore
-  ReactDOM.findDOMNode = (component: any) => {
-    return null;
-  };
+export function findDOMNode(instance: unknown): Element | Text | null {
+  if (
+    instance &&
+    typeof instance === 'object' &&
+    'current' in (instance as Record<string, unknown>)
+  ) {
+    return (instance as { current: Element | Text | null }).current ?? null;
+  }
+  if (instance instanceof Element || instance instanceof Text) return instance;
+  return null;
 }
-
-export {};

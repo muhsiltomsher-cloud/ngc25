@@ -1,6 +1,5 @@
 "use client";
 
-import '@/lib/react-dom-polyfill';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { createStore } from 'polotno/model/store';
@@ -13,6 +12,8 @@ const Workspace = dynamic(
   () => import('@/lib/polotno-workspace').then((mod) => mod.Workspace),
   { ssr: false }
 );
+
+export const runtime = 'edge';
 
 export default function MoodboardEditorPage() {
   const [store] = useState(() =>
@@ -169,7 +170,15 @@ export default function MoodboardEditorPage() {
     const page = store.activePage;
     if (!page) return;
 
-    const shapeConfig: any = {
+    type ShapeConfig = {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      fill: string;
+    };
+
+    const shapeConfig: ShapeConfig = {
       x: 50,
       y: 50,
       width: 200,
@@ -180,14 +189,14 @@ export default function MoodboardEditorPage() {
     if (shapeType === 'rect') {
       page.addElement({ type: 'svg', ...shapeConfig });
     } else if (shapeType === 'circle') {
-      page.addElement({ type: 'svg', ...shapeConfig, borderRadius: 100 });
+      page.addElement({ type: 'svg', ...shapeConfig, cornerRadius: 100 });
     } else if (shapeType === 'triangle') {
       page.addElement({ type: 'svg', ...shapeConfig });
     }
   }, [store]);
 
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target?.[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
@@ -210,7 +219,7 @@ export default function MoodboardEditorPage() {
 
   const handleSave = useCallback(() => {
     const json = store.toJSON();
-    const blob = new Blob([json], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(json)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -252,8 +261,7 @@ export default function MoodboardEditorPage() {
   }, []);
 
   const handleDelete = useCallback(() => {
-    const selected = store.selectedElements;
-    selected.forEach(el => el.remove());
+    store.deleteElements(store.selectedElements.map(el => el.id));
   }, [store]);
 
   const handleDuplicate = useCallback(() => {
@@ -388,16 +396,16 @@ export default function MoodboardEditorPage() {
         <div style={{ width: '320px', backgroundColor: 'white', borderRight: '1px solid #e0e0e0', display: 'flex', flexDirection: 'column' }}>
           {/* Tabs */}
           <div style={{ display: 'flex', borderBottom: '1px solid #e0e0e0', backgroundColor: '#fafafa' }}>
-            {[
+            {([
               { id: 'templates', label: 'Templates', icon: '📋' },
               { id: 'products', label: 'Products', icon: '🎨' },
               { id: 'text', label: 'Text', icon: 'T' },
               { id: 'shapes', label: 'Shapes', icon: '⬛' },
               { id: 'upload', label: 'Upload', icon: '📤' },
-            ].map((tab) => (
+            ] as const).map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id)}
                 style={{
                   flex: 1,
                   padding: '12px 8px',
@@ -697,13 +705,13 @@ export default function MoodboardEditorPage() {
           }}>
             <button
               onClick={() => store.history.undo()}
-              disabled={!store.history.canUndo()}
+              disabled={!store.history.canUndo}
               style={{
                 padding: '6px 12px',
-                backgroundColor: store.history.canUndo() ? '#ecf0f1' : '#f5f5f5',
+                backgroundColor: store.history.canUndo ? '#ecf0f1' : '#f5f5f5',
                 border: '1px solid #ddd',
                 borderRadius: '4px',
-                cursor: store.history.canUndo() ? 'pointer' : 'not-allowed',
+                cursor: store.history.canUndo ? 'pointer' : 'not-allowed',
                 fontSize: '13px',
               }}
             >
@@ -711,13 +719,13 @@ export default function MoodboardEditorPage() {
             </button>
             <button
               onClick={() => store.history.redo()}
-              disabled={!store.history.canRedo()}
+              disabled={!store.history.canRedo}
               style={{
                 padding: '6px 12px',
-                backgroundColor: store.history.canRedo() ? '#ecf0f1' : '#f5f5f5',
+                backgroundColor: store.history.canRedo ? '#ecf0f1' : '#f5f5f5',
                 border: '1px solid #ddd',
                 borderRadius: '4px',
-                cursor: store.history.canRedo() ? 'pointer' : 'not-allowed',
+                cursor: store.history.canRedo ? 'pointer' : 'not-allowed',
                 fontSize: '13px',
               }}
             >
