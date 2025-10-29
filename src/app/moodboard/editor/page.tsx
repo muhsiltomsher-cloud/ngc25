@@ -1,32 +1,46 @@
 "use client";
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import dynamic from 'next/dynamic';
-import { createStore } from 'polotno/model/store';
-import { unstable_setAnimationsEnabled } from 'polotno/config';
+import nextDynamic from 'next/dynamic';
 import { allProducts } from '@/data/productsData';
+import type { StoreType } from 'polotno/model/store';
 
-unstable_setAnimationsEnabled(false);
-
-const Workspace = dynamic(
+const Workspace = nextDynamic(
   () => import('@/lib/polotno-workspace').then((mod) => mod.Workspace),
   { ssr: false }
 );
 
-export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 
 export default function MoodboardEditorPage() {
-  const [store] = useState(() =>
-    createStore({
-      key: 'NHUuVJMt0l3lqyb98cbF',
-      showCredit: false,
-    })
-  );
+  const [store, setStore] = useState<StoreType | null>(null);
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'templates' | 'products' | 'text' | 'shapes' | 'upload'>('templates');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [zoom, setZoom] = useState(1);
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    Promise.all([
+      import('polotno/model/store'),
+      import('polotno/config')
+    ]).then(([{ createStore }, { unstable_setAnimationsEnabled }]) => {
+      if (isMounted) {
+        const newStore = createStore({
+          key: 'NHUuVJMt0l3lqyb98cbF',
+          showCredit: false,
+        });
+        setStore(newStore);
+        unstable_setAnimationsEnabled(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const categories = useMemo(() => {
     const cats = new Set(allProducts.map(p => p.category));
@@ -106,7 +120,7 @@ export default function MoodboardEditorPage() {
   useEffect(() => {
     setMounted(true);
     
-    if (store.pages.length === 0) {
+    if (store && store.pages.length === 0) {
       store.addPage({
         width: 1200,
         height: 800,
@@ -115,6 +129,7 @@ export default function MoodboardEditorPage() {
   }, [store]);
 
   const applyTemplate = useCallback((template: typeof templates[0]) => {
+    if (!store) return;
     store.clear();
     store.addPage({
       width: template.width,
@@ -138,6 +153,7 @@ export default function MoodboardEditorPage() {
   }, [store]);
 
   const addProductToCanvas = useCallback((imageUrl: string, name: string) => {
+    if (!store) return;
     const page = store.activePage;
     if (!page) return;
 
@@ -153,6 +169,7 @@ export default function MoodboardEditorPage() {
   }, [store]);
 
   const addText = useCallback(() => {
+    if (!store) return;
     const page = store.activePage;
     if (!page) return;
 
@@ -167,6 +184,7 @@ export default function MoodboardEditorPage() {
   }, [store]);
 
   const addShape = useCallback((shapeType: 'rect' | 'circle' | 'triangle') => {
+    if (!store) return;
     const page = store.activePage;
     if (!page) return;
 
@@ -210,6 +228,7 @@ export default function MoodboardEditorPage() {
   }, [addProductToCanvas]);
 
   const handleExport = useCallback(async () => {
+    if (!store) return;
     const url = await store.toDataURL();
     const a = document.createElement('a');
     a.href = url;
@@ -218,6 +237,7 @@ export default function MoodboardEditorPage() {
   }, [store]);
 
   const handleSave = useCallback(() => {
+    if (!store) return;
     const json = store.toJSON();
     const blob = new Blob([JSON.stringify(json)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -229,6 +249,7 @@ export default function MoodboardEditorPage() {
   }, [store]);
 
   const handleLoad = useCallback(() => {
+    if (!store) return;
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
@@ -239,7 +260,7 @@ export default function MoodboardEditorPage() {
       const reader = new FileReader();
       reader.onload = (event) => {
         const json = event.target?.result as string;
-        if (json) {
+        if (json && store) {
           store.loadJSON(json);
         }
       };
@@ -261,10 +282,12 @@ export default function MoodboardEditorPage() {
   }, []);
 
   const handleDelete = useCallback(() => {
+    if (!store) return;
     store.deleteElements(store.selectedElements.map(el => el.id));
   }, [store]);
 
   const handleDuplicate = useCallback(() => {
+    if (!store) return;
     const selected = store.selectedElements;
     selected.forEach(el => {
       const page = store.activePage;
@@ -279,6 +302,7 @@ export default function MoodboardEditorPage() {
   }, [store]);
 
   const handleBringForward = useCallback(() => {
+    if (!store) return;
     const selected = store.selectedElements[0];
     if (selected) {
       selected.set({ zIndex: (selected.zIndex || 0) + 1 });
@@ -286,13 +310,14 @@ export default function MoodboardEditorPage() {
   }, [store]);
 
   const handleSendBackward = useCallback(() => {
+    if (!store) return;
     const selected = store.selectedElements[0];
     if (selected) {
       selected.set({ zIndex: Math.max(0, (selected.zIndex || 0) - 1) });
     }
   }, [store]);
 
-  if (!mounted) {
+  if (!store || !mounted) {
     return (
       <div style={{ 
         width: '100vw', 
