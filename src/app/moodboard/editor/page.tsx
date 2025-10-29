@@ -8,6 +8,12 @@ import { MoodboardTemplate, ProductZone } from '@/data/templatesData';
 import { Rnd } from 'react-rnd';
 import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
+import { ImprovedProductLibrary } from '@/components/moodboard/ImprovedProductLibrary';
+import { WallFloorControls } from '@/components/moodboard/WallFloorControls';
+import { UploadRoomImage } from '@/components/moodboard/UploadRoomImage';
+import { SidebarSection } from '@/components/moodboard/ui/SidebarSection';
+import { IconButton } from '@/components/moodboard/ui/IconButton';
+import { Toolbar, ToolbarGroup, ToolbarSeparator } from '@/components/moodboard/ui/Toolbar';
 
 type BoardItem = {
   id: string;
@@ -34,104 +40,6 @@ type CustomizationState = {
   material?: string;
   opacity?: number;
 };
-
-function ProductLibrary({ onInsert, onSetBackground, disabled = false }: { onInsert?: (url: string, name?: string, category?: string) => void; onSetBackground?: (url: string, name?: string) => void; disabled?: boolean }) {
-  const [q, setQ] = useState('');
-  const [category, setCategory] = useState<string>('');
-
-  const items = useMemo(() => {
-    const query = q.trim().toLowerCase();
-    const list = allProducts.map(p => ({ id: p.id, name: p.name, image: p.image, category: p.category }));
-    const filteredByCat = category ? list.filter(i => (i.category || '').toLowerCase() === category.toLowerCase()) : list;
-    if (!query) return filteredByCat;
-    return filteredByCat.filter(i => `${i.name} ${i.category}`.toLowerCase().includes(query));
-  }, [q, category]);
-
-  const mainTemplates = useMemo(() => {
-    const wanted = ['Walls', 'Floors', 'Fabrics'];
-    const fallback: Record<string, string> = {
-      Walls: 'https://images.unsplash.com/photo-1470309864661-68328b2cd0a5?auto=format&fit=crop&w=1200&q=80',
-      Floors: 'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80',
-      Fabrics: 'https://images.unsplash.com/photo-1525253086316-d0c936c814f8?auto=format&fit=crop&w=1200&q=80',
-    };
-    return wanted.map((cat) => {
-      const found = allProducts.find((p) => (p.category || '').toLowerCase() === cat.toLowerCase());
-      return { title: cat, url: found?.image || fallback[cat] || fallback.Walls };
-    });
-  }, []);
-
-  return (
-    <div className="w-full h-full flex flex-col">
-      <div className="p-3 border-b border-gray-200 bg-white/80 backdrop-blur flex gap-2">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search products..."
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-800"
-        />
-        <select value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-lg border border-gray-300 px-2 py-2 text-sm">
-          <option value="">All</option>
-          {[...new Set(allProducts.map(p => p.category).concat(['Home']))].sort().map(c => (<option key={c} value={c}>{c}</option>))}
-        </select>
-      </div>
-      <div className="flex-1 overflow-auto p-3 space-y-4 bg-white/70">
-        <div>
-          <div className="px-1 pb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">Main Categories</div>
-          <div className="grid grid-cols-2 gap-3">
-            {mainTemplates.map((t) => (
-              <div key={t.title} className="group relative rounded-lg overflow-hidden border border-gray-200 bg-white">
-                <div className="aspect-[4/3] bg-gray-100 relative">
-                  <NextImage src={t.url} alt={t.title} fill sizes="(max-width: 768px) 50vw, 200px" className="object-cover" />
-                </div>
-                <div className="p-2 flex items-center justify-between">
-                  <div className="text-xs font-medium text-gray-800">{t.title}</div>
-                  <button
-                    className={`px-2 py-1 text-[11px] rounded-full border ${disabled ? 'border-gray-200 bg-gray-100 text-gray-400' : 'border-gray-300 bg-white hover:bg-gray-50'} `}
-                    onClick={() => onSetBackground && onSetBackground(t.url, t.title)}
-                    disabled={disabled || !onSetBackground}
-                  >
-                    Add as background
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {items.map((it) => (
-          <div key={it.id} className="flex items-center gap-3 p-2 rounded-lg border border-gray-200 bg-white hover:shadow-sm">
-            <div
-              className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 border border-gray-200 shrink-0 relative"
-              draggable={!disabled}
-              onDragStart={(e) => {
-                try {
-                  const payload = JSON.stringify({ url: it.image, name: it.name, category: it.category });
-                  e.dataTransfer.setData('application/x-moodboard-item', payload);
-                } catch {}
-                e.dataTransfer.setData('text/uri-list', it.image);
-                e.dataTransfer.effectAllowed = 'copy';
-              }}
-            >
-              <NextImage src={it.image} alt={it.name} fill sizes="48px" className="object-cover pointer-events-none" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium text-gray-900 truncate">{it.name}</div>
-              <div className="text-xs text-gray-600 truncate">{it.category}</div>
-            </div>
-            <button
-              className={`px-3 py-1 text-xs rounded-full border ${disabled ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed' : 'border-gray-300 bg-white hover:bg-gray-50'}`}
-              onClick={() => onInsert && onInsert(it.image, it.name, it.category)}
-              disabled={disabled || !onInsert}
-            >
-              Add
-            </button>
-            <Link href={`/product/${it.id}`} className="px-3 py-1 text-xs rounded-full bg-gray-900 text-white hover:bg-black" title="View details">View</Link>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function MoodboardEditorInner() {
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -492,105 +400,92 @@ function MoodboardEditorInner() {
             </div>
             <Link href="/moodboard/templates" className="text-xs font-medium text-gray-600 hover:text-gray-900">Templates</Link>
           </div>
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto bg-gray-50">
             {template && (
-              <div className="p-3 border-b border-gray-200 bg-blue-50">
-                <div className="text-sm font-semibold text-gray-900 mb-1">Active Template</div>
+              <SidebarSection
+                title="Active Template"
+                description={`${template.zones.length} product zones`}
+                collapsible={false}
+                action={
+                  <button
+                    onClick={() => setShowZones(!showZones)}
+                    className="px-2 py-1 text-xs border border-gray-300 rounded bg-white hover:bg-gray-50"
+                  >
+                    {showZones ? 'Hide' : 'Show'}
+                  </button>
+                }
+              >
                 <div className="text-xs text-gray-700">{template.name}</div>
-                <div className="text-xs text-gray-600 mt-1">{template.zones.length} product zones</div>
-                <button
-                  onClick={() => setShowZones(!showZones)}
-                  className="mt-2 px-2 py-1 text-xs border border-gray-300 rounded bg-white hover:bg-gray-50"
-                >
-                  {showZones ? 'Hide' : 'Show'} Zones
-                </button>
-              </div>
+              </SidebarSection>
             )}
 
-            <div className="p-3 border-b border-gray-200 bg-white/70">
-              <div className="text-sm font-semibold text-gray-900 mb-2">Upload Room Image</div>
-              <input
-                type="file"
-                accept="image/*"
-                className="block w-full text-xs text-gray-700 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-gray-300 file:bg-white file:text-gray-800 hover:file:bg-gray-50"
-                onChange={async (e) => {
-                  const f = e.currentTarget.files?.[0];
-                  if (!f) return;
-                  try {
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      const url = String(reader.result || '');
-                      setBackground({ url, name: f.name, fit: 'cover' });
-                      pushHistory();
-                    };
-                    reader.readAsDataURL(f);
-                  } catch {}
-                }}
-              />
-            </div>
+            <UploadRoomImage
+              onUpload={async (e) => {
+                const f = e.currentTarget.files?.[0];
+                if (!f) return;
+                try {
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    const url = String(reader.result || '');
+                    setBackground({ url, name: f.name, fit: 'cover' });
+                    pushHistory();
+                  };
+                  reader.readAsDataURL(f);
+                } catch {}
+              }}
+              disabled={!mounted}
+            />
 
-            <div className="p-3 border-b border-gray-200 bg-white/70 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-gray-900">Wall & Floor</div>
-                <div className="text-xs text-gray-500">Horizon: {horizon}%</div>
-              </div>
-              <input type="range" min={20} max={80} value={horizon} onChange={(e) => setHorizon(parseInt(e.target.value, 10))} className="w-full" />
+            <WallFloorControls
+              horizon={horizon}
+              onHorizonChange={setHorizon}
+              wallColor={wallStyle.color || '#ffffff'}
+              onWallColorChange={(color) => setWallStyle((s) => ({ ...s, color }))}
+              wallOpacity={Math.round((wallStyle.opacity || 0) * 100)}
+              onWallOpacityChange={(opacity) => setWallStyle((s) => ({ ...s, opacity: opacity / 100 }))}
+              wallTextureRepeat={!!wallStyle.repeat}
+              onWallTextureRepeatChange={(repeat) => setWallStyle((s) => ({ ...s, repeat }))}
+              floorColor={floorStyle.color || '#eaeaea'}
+              onFloorColorChange={(color) => setFloorStyle((s) => ({ ...s, color }))}
+              floorOpacity={Math.round((floorStyle.opacity || 0) * 100)}
+              onFloorOpacityChange={(opacity) => setFloorStyle((s) => ({ ...s, opacity: opacity / 100 }))}
+              floorTextureRepeat={!!floorStyle.repeat}
+              onFloorTextureRepeatChange={(repeat) => setFloorStyle((s) => ({ ...s, repeat }))}
+              onEditWallMask={() => { setMaskMode('wall'); setMaskDraft([]); }}
+              onClearWallMask={() => setWallMask({ points: [] })}
+              onEditFloorMask={() => { setMaskMode('floor'); setMaskDraft([]); }}
+              onClearFloorMask={() => setFloorMask({ points: [] })}
+              disabled={!mounted}
+            />
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <div className="text-xs font-medium text-gray-700 mb-1">Wall Color</div>
-                  <input type="color" value={wallStyle.color || '#ffffff'} onChange={(e) => setWallStyle((s) => ({ ...s, color: e.target.value }))} />
-                </div>
-                <div>
-                  <div className="text-xs font-medium text-gray-700 mb-1">Wall Opacity</div>
-                  <input type="range" min={0} max={100} value={Math.round((wallStyle.opacity || 0) * 100)} onChange={(e) => setWallStyle((s) => ({ ...s, opacity: Math.round(Number(e.target.value)) / 100 }))} />
-                </div>
-                <div className="col-span-2 flex items-center gap-3">
-                  <button className="px-2 py-1 border border-gray-300 rounded bg-white text-xs" onClick={() => { setMaskMode('wall'); setMaskDraft([]); }}>Edit Wall Mask</button>
-                  <button className="px-2 py-1 border border-gray-300 rounded bg-white text-xs" onClick={() => setWallMask({ points: [] })}>Clear Wall Mask</button>
-                </div>
-                <div>
-                  <div className="text-xs font-medium text-gray-700 mb-1">Floor Color</div>
-                  <input type="color" value={floorStyle.color || '#eaeaea'} onChange={(e) => setFloorStyle((s) => ({ ...s, color: e.target.value }))} />
-                </div>
-                <div>
-                  <div className="text-xs font-medium text-gray-700 mb-1">Floor Opacity</div>
-                  <input type="range" min={0} max={100} value={Math.round((floorStyle.opacity || 0) * 100)} onChange={(e) => setFloorStyle((s) => ({ ...s, opacity: Math.round(Number(e.target.value)) / 100 }))} />
-                </div>
-                <div className="col-span-2 flex items-center gap-3">
-                  <button className="px-2 py-1 border border-gray-300 rounded bg-white text-xs" onClick={() => { setMaskMode('floor'); setMaskDraft([]); }}>Edit Floor Mask</button>
-                  <button className="px-2 py-1 border border-gray-300 rounded bg-white text-xs" onClick={() => setFloorMask({ points: [] })}>Clear Floor Mask</button>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-700 mb-1 block">Wall Texture Repeat</label>
-                  <input type="checkbox" checked={!!wallStyle.repeat} onChange={(e) => setWallStyle((s) => ({ ...s, repeat: e.target.checked }))} />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-700 mb-1 block">Floor Texture Repeat</label>
-                  <input type="checkbox" checked={!!floorStyle.repeat} onChange={(e) => setFloorStyle((s) => ({ ...s, repeat: e.target.checked }))} />
-                </div>
-              </div>
-            </div>
-
-            <div className="p-3 border-b border-gray-200 bg-white/70 space-y-2">
-              <div className="text-sm font-semibold text-gray-900">Walls & Floors from Products</div>
-              <div className="text-xs text-gray-600">Pick any product image to apply as a wall or floor texture.</div>
-              <div className="grid grid-cols-2 gap-3">
+            <SidebarSection
+              title="Quick Apply Textures"
+              description="Apply product images to walls and floors"
+              collapsible={true}
+              defaultOpen={false}
+            >
+              <div className="grid grid-cols-2 gap-2">
                 {allProducts.filter(p => /wall|floor|tile|carpet/i.test(p.category || '')).slice(0, 8).map(p => (
-                  <div key={p.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                  <div key={p.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow">
                     <div className="aspect-[4/3] relative bg-gray-100">
-                      <NextImage src={p.image} alt={p.name} fill sizes="200px" className="object-cover" />
+                      <NextImage src={p.image} alt={p.name} fill sizes="150px" className="object-cover" />
                     </div>
-                    <div className="p-2 flex items-center justify-between gap-2">
-                      <button className="flex-1 px-2 py-1 text-[11px] border border-gray-300 rounded-full bg-white hover:bg-gray-50" onClick={() => setWallStyle((s) => ({ ...s, texture: p.image, color: null }))}>Apply to Wall</button>
-                      <button className="flex-1 px-2 py-1 text-[11px] border border-gray-300 rounded-full bg-white hover:bg-gray-50" onClick={() => setFloorStyle((s) => ({ ...s, texture: p.image, color: null }))}>Apply to Floor</button>
+                    <div className="p-1.5 flex items-center justify-between gap-1">
+                      <button className="flex-1 px-1.5 py-1 text-[10px] border border-gray-300 rounded bg-white hover:bg-gray-50" onClick={() => setWallStyle((s) => ({ ...s, texture: p.image, color: null }))}>Wall</button>
+                      <button className="flex-1 px-1.5 py-1 text-[10px] border border-gray-300 rounded bg-white hover:bg-gray-50" onClick={() => setFloorStyle((s) => ({ ...s, texture: p.image, color: null }))}>Floor</button>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </SidebarSection>
 
-            <ProductLibrary onInsert={mounted ? addImage : undefined} onSetBackground={mounted ? setBackgroundImage : undefined} disabled={!mounted} />
+            <div className="border-t-4 border-gray-200">
+              <ImprovedProductLibrary
+                onInsert={mounted ? addImage : undefined}
+                onSetBackground={mounted ? setBackgroundImage : undefined}
+                disabled={!mounted}
+              />
+            </div>
           </div>
         </aside>
 
