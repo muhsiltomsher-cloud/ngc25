@@ -1,4 +1,4 @@
-﻿﻿﻿﻿// src/data/productsData.ts
+﻿﻿﻿﻿﻿﻿// src/data/productsData.ts
 
 export type ProductViewKey = 'installed' | 'room' | 'swatch';
 
@@ -1395,9 +1395,9 @@ export const allProducts: Product[] = [
   {
     id: 'om-light-night',
     name: 'Light Night Weave',
-    image: 'https://images.unsplash.com/photo-1493669928585-85d5193d9d3f?auto=format&fit=crop&w=1600&q=80',
+    image: 'https://images.unsplash.com/photo-1509644851169-2acc08aa25b5?auto=format&fit=crop&w=1600&q=80',
     gallery: [
-      'https://images.unsplash.com/photo-1493669928585-85d5193d9d3f?auto=format&fit=crop&w=1600&q=80'
+      'https://images.unsplash.com/photo-1509644851169-2acc08aa25b5?auto=format&fit=crop&w=1600&q=80'
     ],
     description: 'Non-woven textured weave suitable for calm lounge environments.',
     brandKey: 'omexco',
@@ -1891,9 +1891,9 @@ export const allProducts: Product[] = [
   {
     id: 'om-weave-natural',
     name: 'Weave Natural Hemp',
-    image: 'https://images.unsplash.com/photo-1493669928585-85d5193d9d3f?auto=format&fit=crop&w=1600&q=80',
+    image: 'https://images.unsplash.com/photo-1509644851169-2acc08aa25b5?auto=format&fit=crop&w=1600&q=80',
     gallery: [
-      'https://images.unsplash.com/photo-1493669928585-85d5193d9d3f?auto=format&fit=crop&w=1600&q=80'
+      'https://images.unsplash.com/photo-1509644851169-2acc08aa25b5?auto=format&fit=crop&w=1600&q=80'
     ],
     description: 'Natural hemp weave wallcovering with organic texture.',
     brandKey: 'omexco',
