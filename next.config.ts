@@ -1,7 +1,7 @@
-﻿import type { NextConfig } from 'next';
+﻿﻿﻿﻿﻿import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  reactStrictMode: false, // Enable React Strict Mode for development
+  reactStrictMode: false,
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
@@ -14,8 +14,8 @@ const nextConfig: NextConfig = {
       { source: '/product-details/:id', destination: '/product/:id' },
     ];
   },
+  transpilePackages: ['polotno'],
   webpack: (config, { isServer }) => {
-    // Ensure support for ES modules in both client and server environments
     if (!isServer) {
       config.module.rules.push({
         test: /\.mjs$/,
