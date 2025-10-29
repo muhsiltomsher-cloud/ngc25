@@ -389,8 +389,8 @@ function MoodboardEditorInner() {
     try {
       const payload = e.dataTransfer.getData('application/x-moodboard-item');
       if (payload) {
-        const { url, name, category } = JSON.parse(payload) as { url: string; name?: string; category?: string };
-        await addImageAt(url, name, { x, y }, category);
+        const { url, name } = JSON.parse(payload) as { url: string; name?: string; category?: string };
+        await addImageAt(url, name, { x, y });
         return;
       }
     } catch {}
