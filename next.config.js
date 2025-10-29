@@ -1,7 +1,6 @@
-﻿﻿﻿import type { NextConfig } from 'next';
-import path from 'path';
+const path = require('path');
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   reactStrictMode: false,
   images: {
     remotePatterns: [
@@ -29,5 +28,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
-
+module.exports = nextConfig;
