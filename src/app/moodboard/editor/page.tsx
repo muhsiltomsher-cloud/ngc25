@@ -1,865 +1,1015 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import nextDynamic from 'next/dynamic';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import NextImage from 'next/image';
+import Link from 'next/link';
 import { allProducts } from '@/data/productsData';
-import type { StoreType } from 'polotno/model/store';
+import { MoodboardTemplate, ProductZone } from '@/data/templatesData';
+import { Rnd } from 'react-rnd';
+import { toPng } from 'html-to-image';
+import jsPDF from 'jspdf';
 
-const Workspace = nextDynamic(
-  () => import('@/lib/polotno-workspace').then((mod) => mod.Workspace),
-  { ssr: false }
-);
+type BoardItem = {
+  id: string;
+  type: 'image' | 'text';
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  rotation?: number;
+  url?: string;
+  text?: string;
+  name?: string;
+  z?: number;
+  locked?: boolean;
+  zoneId?: string;
+  color?: string;
+  material?: string;
+};
 
-export const dynamic = 'force-dynamic';
+type CustomizationState = {
+  color?: string;
+  texture?: string;
+  size?: { width: number; height: number };
+  material?: string;
+  opacity?: number;
+};
 
-export default function MoodboardEditorPage() {
-  const [store, setStore] = useState<StoreType | null>(null);
-  const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState<'templates' | 'products' | 'text' | 'shapes' | 'upload'>('templates');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [zoom, setZoom] = useState(1);
+function ProductLibrary({ onInsert, onSetBackground, disabled = false }: { onInsert?: (url: string, name?: string, category?: string) => void; onSetBackground?: (url: string, name?: string) => void; disabled?: boolean }) {
+  const [q, setQ] = useState('');
+  const [category, setCategory] = useState<string>('');
 
-  useEffect(() => {
-    let isMounted = true;
-    
-    Promise.all([
-      import('polotno/model/store'),
-      import('polotno/config')
-    ]).then(([{ createStore }, { unstable_setAnimationsEnabled }]) => {
-      if (isMounted) {
-        const newStore = createStore({
-          key: 'NHUuVJMt0l3lqyb98cbF',
-          showCredit: false,
-        });
-        setStore(newStore);
-        unstable_setAnimationsEnabled(false);
-      }
-    });
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    const list = allProducts.map(p => ({ id: p.id, name: p.name, image: p.image, category: p.category }));
+    const filteredByCat = category ? list.filter(i => (i.category || '').toLowerCase() === category.toLowerCase()) : list;
+    if (!query) return filteredByCat;
+    return filteredByCat.filter(i => `${i.name} ${i.category}`.toLowerCase().includes(query));
+  }, [q, category]);
 
-    return () => {
-      isMounted = false;
+  const mainTemplates = useMemo(() => {
+    const wanted = ['Walls', 'Floors', 'Fabrics'];
+    const fallback: Record<string, string> = {
+      Walls: 'https://images.unsplash.com/photo-1470309864661-68328b2cd0a5?auto=format&fit=crop&w=1200&q=80',
+      Floors: 'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80',
+      Fabrics: 'https://images.unsplash.com/photo-1525253086316-d0c936c814f8?auto=format&fit=crop&w=1200&q=80',
     };
-  }, []);
-
-  const categories = useMemo(() => {
-    const cats = new Set(allProducts.map(p => p.category));
-    return ['All', ...Array.from(cats).sort()];
-  }, []);
-
-  const filteredProducts = useMemo(() => {
-    let products = allProducts;
-    
-    if (selectedCategory && selectedCategory !== 'All') {
-      products = products.filter(p => p.category === selectedCategory);
-    }
-    
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      products = products.filter(p => 
-        p.name.toLowerCase().includes(query) || 
-        p.category.toLowerCase().includes(query) ||
-        p.description.toLowerCase().includes(query)
-      );
-    }
-    
-    return products;
-  }, [searchQuery, selectedCategory]);
-
-  const templates = [
-    {
-      id: 'walls-showcase',
-      name: 'Walls Showcase',
-      thumbnail: 'https://images.unsplash.com/photo-1470309864661-68328b2cd0a5?auto=format&fit=crop&w=400&q=80',
-      width: 1200,
-      height: 800,
-      background: '#f5f5f5',
-    },
-    {
-      id: 'floors-display',
-      name: 'Floors Display',
-      thumbnail: 'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=400&q=80',
-      width: 1200,
-      height: 800,
-      background: '#ffffff',
-    },
-    {
-      id: 'fabrics-collection',
-      name: 'Fabrics Collection',
-      thumbnail: 'https://images.unsplash.com/photo-1525253086316-d0c936c814f8?auto=format&fit=crop&w=400&q=80',
-      width: 1200,
-      height: 800,
-      background: '#fafafa',
-    },
-    {
-      id: 'room-mockup',
-      name: 'Room Mockup',
-      thumbnail: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=400&q=80',
-      width: 1600,
-      height: 900,
-      background: '#e8e8e8',
-    },
-    {
-      id: 'presentation-board',
-      name: 'Presentation Board',
-      thumbnail: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80',
-      width: 1920,
-      height: 1080,
-      background: '#ffffff',
-    },
-    {
-      id: 'square-layout',
-      name: 'Square Layout',
-      thumbnail: 'https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=400&q=80',
-      width: 1000,
-      height: 1000,
-      background: '#f0f0f0',
-    },
-  ];
-
-  useEffect(() => {
-    setMounted(true);
-    
-    if (store && store.pages.length === 0) {
-      store.addPage({
-        width: 1200,
-        height: 800,
-      });
-    }
-  }, [store]);
-
-  const applyTemplate = useCallback((template: typeof templates[0]) => {
-    if (!store) return;
-    store.clear();
-    store.addPage({
-      width: template.width,
-      height: template.height,
-      background: template.background,
+    return wanted.map((cat) => {
+      const found = allProducts.find((p) => (p.category || '').toLowerCase() === cat.toLowerCase());
+      return { title: cat, url: found?.image || fallback[cat] || fallback.Walls };
     });
-
-    const page = store.activePage;
-    if (page && template.thumbnail) {
-      page.addElement({
-        type: 'image',
-        src: template.thumbnail,
-        x: 0,
-        y: 0,
-        width: template.width,
-        height: template.height,
-        selectable: false,
-        opacity: 0.3,
-      });
-    }
-  }, [store]);
-
-  const addProductToCanvas = useCallback((imageUrl: string, name: string) => {
-    if (!store) return;
-    const page = store.activePage;
-    if (!page) return;
-
-    page.addElement({
-      type: 'image',
-      src: imageUrl,
-      x: 50,
-      y: 50,
-      width: 300,
-      height: 300,
-      name: name,
-    });
-  }, [store]);
-
-  const addText = useCallback(() => {
-    if (!store) return;
-    const page = store.activePage;
-    if (!page) return;
-
-    page.addElement({
-      type: 'text',
-      x: 50,
-      y: 50,
-      width: 300,
-      fontSize: 32,
-      text: 'Double-click to edit',
-    });
-  }, [store]);
-
-  const addShape = useCallback((shapeType: 'rect' | 'circle' | 'triangle') => {
-    if (!store) return;
-    const page = store.activePage;
-    if (!page) return;
-
-    type ShapeConfig = {
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-      fill: string;
-    };
-
-    const shapeConfig: ShapeConfig = {
-      x: 50,
-      y: 50,
-      width: 200,
-      height: 200,
-      fill: '#3498db',
-    };
-
-    if (shapeType === 'rect') {
-      page.addElement({ type: 'svg', ...shapeConfig });
-    } else if (shapeType === 'circle') {
-      page.addElement({ type: 'svg', ...shapeConfig, cornerRadius: 100 });
-    } else if (shapeType === 'triangle') {
-      page.addElement({ type: 'svg', ...shapeConfig });
-    }
-  }, [store]);
-
-  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        addProductToCanvas(dataUrl, file.name);
-      }
-    };
-    reader.readAsDataURL(file);
-  }, [addProductToCanvas]);
-
-  const handleExport = useCallback(async () => {
-    if (!store) return;
-    const url = await store.toDataURL();
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'moodboard.png';
-    a.click();
-  }, [store]);
-
-  const handleSave = useCallback(() => {
-    if (!store) return;
-    const json = store.toJSON();
-    const blob = new Blob([JSON.stringify(json)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'moodboard.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [store]);
-
-  const handleLoad = useCallback(() => {
-    if (!store) return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const json = event.target?.result as string;
-        if (json && store) {
-          store.loadJSON(json);
-        }
-      };
-      reader.readAsText(file);
-    };
-    input.click();
-  }, [store]);
-
-  const handleZoomIn = useCallback(() => {
-    setZoom(prev => Math.min(prev + 0.1, 3));
   }, []);
-
-  const handleZoomOut = useCallback(() => {
-    setZoom(prev => Math.max(prev - 0.1, 0.1));
-  }, []);
-
-  const handleZoomFit = useCallback(() => {
-    setZoom(1);
-  }, []);
-
-  const handleDelete = useCallback(() => {
-    if (!store) return;
-    store.deleteElements(store.selectedElements.map(el => el.id));
-  }, [store]);
-
-  const handleDuplicate = useCallback(() => {
-    if (!store) return;
-    const selected = store.selectedElements;
-    selected.forEach(el => {
-      const page = store.activePage;
-      if (page) {
-        page.addElement({
-          ...el.toJSON(),
-          x: el.x + 20,
-          y: el.y + 20,
-        });
-      }
-    });
-  }, [store]);
-
-  const handleBringForward = useCallback(() => {
-    if (!store) return;
-    const selected = store.selectedElements[0];
-    if (selected) {
-      selected.set({ zIndex: (selected.zIndex || 0) + 1 });
-    }
-  }, [store]);
-
-  const handleSendBackward = useCallback(() => {
-    if (!store) return;
-    const selected = store.selectedElements[0];
-    if (selected) {
-      selected.set({ zIndex: Math.max(0, (selected.zIndex || 0) - 1) });
-    }
-  }, [store]);
-
-  if (!store || !mounted) {
-    return (
-      <div style={{ 
-        width: '100vw', 
-        height: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        backgroundColor: '#f5f5f5',
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '18px', fontWeight: '600', marginBottom: '10px' }}>
-            Loading Moodboard Editor...
-          </div>
-          <div style={{ fontSize: '14px', color: '#666' }}>
-            Powered by Polotno
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f5f5f5' }}>
-      {/* Header */}
-      <div style={{ 
-        height: '60px', 
-        backgroundColor: '#2c3e50',
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 20px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        zIndex: 100,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>
-            NGC25 Moodboard Editor
-          </h1>
-          <div style={{ 
-            fontSize: '11px', 
-            backgroundColor: 'rgba(255,255,255,0.2)',
-            padding: '4px 8px',
-            borderRadius: '4px',
-          }}>
-            Powered by Polotno
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button
-            onClick={handleLoad}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: 'rgba(255,255,255,0.2)',
-              border: 'none',
-              borderRadius: '6px',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-            }}
-          >
-            Load Project
-          </button>
-          <button
-            onClick={handleSave}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: 'rgba(255,255,255,0.2)',
-              border: 'none',
-              borderRadius: '6px',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-            }}
-          >
-            Save Project
-          </button>
-          <button
-            onClick={handleExport}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#3498db',
-              border: 'none',
-              borderRadius: '6px',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-            }}
-          >
-            Export PNG
-          </button>
-        </div>
+    <div className="w-full h-full flex flex-col">
+      <div className="p-3 border-b border-gray-200 bg-white/80 backdrop-blur flex gap-2">
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search products..."
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-800"
+        />
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-lg border border-gray-300 px-2 py-2 text-sm">
+          <option value="">All</option>
+          {[...new Set(allProducts.map(p => p.category).concat(['Home']))].sort().map(c => (<option key={c} value={c}>{c}</option>))}
+        </select>
       </div>
-
-      {/* Main Content */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {/* Left Sidebar */}
-        <div style={{ width: '320px', backgroundColor: 'white', borderRight: '1px solid #e0e0e0', display: 'flex', flexDirection: 'column' }}>
-          {/* Tabs */}
-          <div style={{ display: 'flex', borderBottom: '1px solid #e0e0e0', backgroundColor: '#fafafa' }}>
-            {([
-              { id: 'templates', label: 'Templates', icon: '📋' },
-              { id: 'products', label: 'Products', icon: '🎨' },
-              { id: 'text', label: 'Text', icon: 'T' },
-              { id: 'shapes', label: 'Shapes', icon: '⬛' },
-              { id: 'upload', label: 'Upload', icon: '📤' },
-            ] as const).map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                style={{
-                  flex: 1,
-                  padding: '12px 8px',
-                  border: 'none',
-                  backgroundColor: activeTab === tab.id ? 'white' : 'transparent',
-                  borderBottom: activeTab === tab.id ? '2px solid #3498db' : '2px solid transparent',
-                  cursor: 'pointer',
-                  fontSize: '11px',
-                  fontWeight: activeTab === tab.id ? '600' : '400',
-                  color: activeTab === tab.id ? '#2c3e50' : '#666',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                <span style={{ fontSize: '16px' }}>{tab.icon}</span>
-                <span>{tab.label}</span>
-              </button>
+      <div className="flex-1 overflow-auto p-3 space-y-4 bg-white/70">
+        <div>
+          <div className="px-1 pb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">Main Categories</div>
+          <div className="grid grid-cols-2 gap-3">
+            {mainTemplates.map((t) => (
+              <div key={t.title} className="group relative rounded-lg overflow-hidden border border-gray-200 bg-white">
+                <div className="aspect-[4/3] bg-gray-100 relative">
+                  <NextImage src={t.url} alt={t.title} fill sizes="(max-width: 768px) 50vw, 200px" className="object-cover" />
+                </div>
+                <div className="p-2 flex items-center justify-between">
+                  <div className="text-xs font-medium text-gray-800">{t.title}</div>
+                  <button
+                    className={`px-2 py-1 text-[11px] rounded-full border ${disabled ? 'border-gray-200 bg-gray-100 text-gray-400' : 'border-gray-300 bg-white hover:bg-gray-50'} `}
+                    onClick={() => onSetBackground && onSetBackground(t.url, t.title)}
+                    disabled={disabled || !onSetBackground}
+                  >
+                    Add as background
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
-
-          {/* Tab Content */}
-          <div style={{ flex: 1, overflow: 'auto', padding: '15px' }}>
-            {activeTab === 'templates' && (
-              <div>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 15px 0' }}>
-                  Custom Templates
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
-                  {templates.map((template) => (
-                    <div
-                      key={template.id}
-                      onClick={() => applyTemplate(template)}
-                      style={{
-                        border: '1px solid #e0e0e0',
-                        borderRadius: '8px',
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        transition: 'transform 0.2s, box-shadow 0.2s',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
-                    >
-                      <div style={{ position: 'relative', width: '100%', paddingTop: '60%', backgroundColor: '#f5f5f5' }}>
-                        <img
-                          src={template.thumbnail}
-                          alt={template.name}
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                          }}
-                        />
-                      </div>
-                      <div style={{ padding: '12px' }}>
-                        <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>
-                          {template.name}
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#666' }}>
-                          {template.width} × {template.height}px
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'products' && (
-              <div>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 15px 0' }}>
-                  Product Library
-                </h3>
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    border: '1px solid #ddd',
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                    marginBottom: '10px',
-                  }}
-                />
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    border: '1px solid #ddd',
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                    marginBottom: '15px',
-                  }}
-                >
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-                  {filteredProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      onClick={() => addProductToCanvas(product.image, product.name)}
-                      style={{
-                        border: '1px solid #e0e0e0',
-                        borderRadius: '8px',
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        transition: 'transform 0.2s, box-shadow 0.2s',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
-                    >
-                      <div style={{ position: 'relative', width: '100%', paddingTop: '100%', backgroundColor: '#f5f5f5' }}>
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                          }}
-                        />
-                      </div>
-                      <div style={{ padding: '8px' }}>
-                        <div style={{ 
-                          fontSize: '12px', 
-                          fontWeight: '600',
-                          marginBottom: '4px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}>
-                          {product.name}
-                        </div>
-                        <div style={{ 
-                          fontSize: '10px', 
-                          color: '#666',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}>
-                          {product.category}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {filteredProducts.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '40px 20px', color: '#999', fontSize: '14px' }}>
-                    No products found
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'text' && (
-              <div>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 15px 0' }}>
-                  Add Text
-                </h3>
-                <button
-                  onClick={addText}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    backgroundColor: '#3498db',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                  }}
-                >
-                  Add Text Box
-                </button>
-                <p style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
-                  Click to add a text box to your moodboard. Double-click the text to edit it.
-                </p>
-              </div>
-            )}
-
-            {activeTab === 'shapes' && (
-              <div>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 15px 0' }}>
-                  Add Shapes
-                </h3>
-                <div style={{ display: 'grid', gap: '10px' }}>
-                  <button
-                    onClick={() => addShape('rect')}
-                    style={{
-                      padding: '12px',
-                      backgroundColor: '#3498db',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                    }}
-                  >
-                    Add Rectangle
-                  </button>
-                  <button
-                    onClick={() => addShape('circle')}
-                    style={{
-                      padding: '12px',
-                      backgroundColor: '#3498db',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                    }}
-                  >
-                    Add Circle
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'upload' && (
-              <div>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 15px 0' }}>
-                  Upload Image
-                </h3>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  style={{ display: 'none' }}
-                  id="file-upload"
-                />
-                <label
-                  htmlFor="file-upload"
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    padding: '12px',
-                    backgroundColor: '#3498db',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    textAlign: 'center',
-                  }}
-                >
-                  Choose File
-                </label>
-                <p style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
-                  Upload your own images to add to the moodboard.
-                </p>
-              </div>
-            )}
-          </div>
         </div>
 
-        {/* Canvas Area */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-          {/* Toolbar */}
-          <div style={{ 
-            height: '50px', 
-            backgroundColor: 'white', 
-            borderBottom: '1px solid #e0e0e0',
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0 15px',
-            gap: '10px',
-          }}>
-            <button
-              onClick={() => store.history.undo()}
-              disabled={!store.history.canUndo}
-              style={{
-                padding: '6px 12px',
-                backgroundColor: store.history.canUndo ? '#ecf0f1' : '#f5f5f5',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                cursor: store.history.canUndo ? 'pointer' : 'not-allowed',
-                fontSize: '13px',
+        {items.map((it) => (
+          <div key={it.id} className="flex items-center gap-3 p-2 rounded-lg border border-gray-200 bg-white hover:shadow-sm">
+            <div
+              className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 border border-gray-200 shrink-0 relative"
+              draggable={!disabled}
+              onDragStart={(e) => {
+                try {
+                  const payload = JSON.stringify({ url: it.image, name: it.name, category: it.category });
+                  e.dataTransfer.setData('application/x-moodboard-item', payload);
+                } catch {}
+                e.dataTransfer.setData('text/uri-list', it.image);
+                e.dataTransfer.effectAllowed = 'copy';
               }}
             >
-              ↶ Undo
-            </button>
+              <NextImage src={it.image} alt={it.name} fill sizes="48px" className="object-cover pointer-events-none" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium text-gray-900 truncate">{it.name}</div>
+              <div className="text-xs text-gray-600 truncate">{it.category}</div>
+            </div>
             <button
-              onClick={() => store.history.redo()}
-              disabled={!store.history.canRedo}
-              style={{
-                padding: '6px 12px',
-                backgroundColor: store.history.canRedo ? '#ecf0f1' : '#f5f5f5',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                cursor: store.history.canRedo ? 'pointer' : 'not-allowed',
-                fontSize: '13px',
-              }}
+              className={`px-3 py-1 text-xs rounded-full border ${disabled ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed' : 'border-gray-300 bg-white hover:bg-gray-50'}`}
+              onClick={() => onInsert && onInsert(it.image, it.name, it.category)}
+              disabled={disabled || !onInsert}
             >
-              ↷ Redo
+              Add
             </button>
-            <div style={{ width: '1px', height: '30px', backgroundColor: '#ddd', margin: '0 5px' }} />
-            <button
-              onClick={handleDelete}
-              style={{
-                padding: '6px 12px',
-                backgroundColor: '#ecf0f1',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '13px',
-              }}
-            >
-              🗑️ Delete
-            </button>
-            <button
-              onClick={handleDuplicate}
-              style={{
-                padding: '6px 12px',
-                backgroundColor: '#ecf0f1',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '13px',
-              }}
-            >
-              📋 Duplicate
-            </button>
-            <button
-              onClick={handleBringForward}
-              style={{
-                padding: '6px 12px',
-                backgroundColor: '#ecf0f1',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '13px',
-              }}
-            >
-              ⬆️ Forward
-            </button>
-            <button
-              onClick={handleSendBackward}
-              style={{
-                padding: '6px 12px',
-                backgroundColor: '#ecf0f1',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '13px',
-              }}
-            >
-              ⬇️ Backward
-            </button>
-            <div style={{ flex: 1 }} />
-            <button
-              onClick={handleZoomOut}
-              style={{
-                padding: '6px 12px',
-                backgroundColor: '#ecf0f1',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '13px',
-              }}
-            >
-              −
-            </button>
-            <span style={{ fontSize: '13px', minWidth: '50px', textAlign: 'center' }}>
-              {Math.round(zoom * 100)}%
-            </span>
-            <button
-              onClick={handleZoomIn}
-              style={{
-                padding: '6px 12px',
-                backgroundColor: '#ecf0f1',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '13px',
-              }}
-            >
-              +
-            </button>
-            <button
-              onClick={handleZoomFit}
-              style={{
-                padding: '6px 12px',
-                backgroundColor: '#ecf0f1',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '13px',
-              }}
-            >
-              Fit
-            </button>
+            <Link href={`/product/${it.id}`} className="px-3 py-1 text-xs rounded-full bg-gray-900 text-white hover:bg-black" title="View details">View</Link>
           </div>
-
-          {/* Workspace */}
-          <div style={{ flex: 1, backgroundColor: '#e8e8e8', overflow: 'hidden' }}>
-            <Workspace store={store} />
-          </div>
-        </div>
+        ))}
       </div>
     </div>
+  );
+}
+
+function MoodboardEditorInner() {
+  const boardRef = useRef<HTMLDivElement | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [scale, setScale] = useState(1);
+  const [items, setItems] = useState<BoardItem[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [background, setBackground] = useState<{ url: string | null; name?: string | null; fit?: 'cover' | 'contain' }>({ url: null, name: null, fit: 'cover' });
+  const [showFileMenu, setShowFileMenu] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showIntro, setShowIntro] = useState<boolean>(() => {
+    try { return localStorage.getItem('moodboard_intro_dismissed') !== '1'; } catch { return true; }
+  });
+  
+  const [template, setTemplate] = useState<MoodboardTemplate | null>(null);
+  const [zones, setZones] = useState<ProductZone[]>([]);
+  const [showZones, setShowZones] = useState(true);
+  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
+
+  const [showCustomization, setShowCustomization] = useState(false);
+  const [customization, setCustomization] = useState<CustomizationState>({});
+
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    try {
+      const templateData = sessionStorage.getItem('selectedTemplate');
+      const uploadedImage = sessionStorage.getItem('uploadedRoomImage');
+      
+      if (templateData) {
+        const tmpl: MoodboardTemplate = JSON.parse(templateData);
+        setTemplate(tmpl);
+        setZones(tmpl.zones || []);
+        if (tmpl.backgroundImage) {
+          setBackground({ url: tmpl.backgroundImage, name: tmpl.name, fit: 'cover' });
+        }
+        if (tmpl.wallColor) {
+          setWallStyle(prev => ({ ...prev, color: tmpl.wallColor || '#ffffff' }));
+        }
+        if (tmpl.floorColor) {
+          setFloorStyle(prev => ({ ...prev, color: tmpl.floorColor || '#eaeaea' }));
+        }
+      } else if (uploadedImage) {
+        setBackground({ url: uploadedImage, name: 'Uploaded Room', fit: 'cover' });
+      }
+    } catch (e) {
+      console.error('Failed to load template', e);
+    }
+  }, [mounted]);
+
+  const [snap, setSnap] = useState(true);
+  const [gridSize, setGridSize] = useState(20);
+  const [history, setHistory] = useState<{ items: typeof items; background: typeof background; scale: number; zones: typeof zones }[]>([]);
+  const [historyIndex, setHistoryIndex] = useState<number>(-1);
+
+  const [horizon, setHorizon] = useState<number>(55);
+  const [wallStyle, setWallStyle] = useState<{ color: string | null; texture: string | null; opacity: number; repeat?: boolean; textureScale?: number }>({ color: '#ffffff', texture: null, opacity: 0.35, repeat: false, textureScale: 1 });
+  const [floorStyle, setFloorStyle] = useState<{ color: string | null; texture: string | null; opacity: number; repeat?: boolean; textureScale?: number }>({ color: '#eaeaea', texture: null, opacity: 0.35, repeat: true, textureScale: 1 });
+
+  type Point = { x: number; y: number };
+  const [wallMask, setWallMask] = useState<{ points: Point[] }>({ points: [] });
+  const [floorMask, setFloorMask] = useState<{ points: Point[] }>({ points: [] });
+  const [maskMode, setMaskMode] = useState<null | 'wall' | 'floor'>(null);
+  const [maskDraft, setMaskDraft] = useState<Point[]>([]);
+
+  const takeSnapshot = useCallback(() => ({ items: structuredClone(items), background: structuredClone(background), scale, zones: structuredClone(zones) }), [items, background, scale, zones]);
+  const pushHistory = useCallback((snap?: { items: typeof items; background: typeof background; scale: number; zones: typeof zones }) => {
+    const s = snap ?? takeSnapshot();
+    setHistory((prev) => {
+      const upto = historyIndex >= 0 ? prev.slice(0, historyIndex + 1) : prev;
+      const merged = [...upto, s].slice(-20);
+      setHistoryIndex(merged.length - 1);
+      return merged;
+    });
+  }, [historyIndex, takeSnapshot]);
+
+  const undo = useCallback(() => {
+    setHistoryIndex((idx) => {
+      const n = Math.max(0, idx - 1);
+      const s = history[n];
+      if (s) { setItems(s.items); setBackground(s.background); setScale(s.scale); setZones(s.zones); }
+      return n;
+    });
+  }, [history]);
+  
+  const redo = useCallback(() => {
+    setHistoryIndex((idx) => {
+      const n = Math.min(history.length - 1, idx + 1);
+      const s = history[n];
+      if (s) { setItems(s.items); setBackground(s.background); setScale(s.scale); setZones(s.zones); }
+      return n;
+    });
+  }, [history]);
+
+  const addImageAt = useCallback(async (url: string, name: string | undefined, pos: { x: number; y: number }) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    const dims = await new Promise<{ w: number; h: number }>((resolve) => {
+      img.onload = () => {
+        const maxW = 600; const s = Math.min(1, maxW / (img.naturalWidth || 1));
+        resolve({ w: Math.max(40, Math.round((img.naturalWidth || 400) * s)), h: Math.max(40, Math.round((img.naturalHeight || 300) * s)) });
+      };
+      img.onerror = () => resolve({ w: 400, h: 300 });
+      img.src = url;
+    });
+    
+    let targetZoneId: string | undefined;
+    for (const zone of zones) {
+      const zoneX = (zone.x / 100) * (boardRef.current?.clientWidth || 1200);
+      const zoneY = (zone.y / 100) * (boardRef.current?.clientHeight || 800);
+      const zoneW = (zone.width / 100) * (boardRef.current?.clientWidth || 1200);
+      const zoneH = (zone.height / 100) * (boardRef.current?.clientHeight || 800);
+      
+      if (pos.x >= zoneX && pos.x <= zoneX + zoneW && pos.y >= zoneY && pos.y <= zoneY + zoneH) {
+        targetZoneId = zone.id;
+        dims.w = Math.min(dims.w, zoneW * 0.9);
+        dims.h = Math.min(dims.h, zoneH * 0.9);
+        break;
+      }
+    }
+    
+    setItems((prev) => {
+      const maxZ = prev.reduce((m, it) => Math.max(m, it.z || 0), 0);
+      const id = `item-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+      const item: BoardItem = { id, type: 'image', x: Math.round(pos.x - dims.w / 2), y: Math.round(pos.y - dims.h / 2), w: dims.w, h: dims.h, url, name, z: maxZ + 1, zoneId: targetZoneId };
+      const next: BoardItem[] = [...prev, item];
+      pushHistory({ items: next, background, scale, zones });
+      return next;
+    });
+  }, [scale, background, pushHistory, zones]);
+
+  const addImage = useCallback(async (url: string, name?: string) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    const dims = await new Promise<{ w: number; h: number }>((resolve) => {
+      img.onload = () => {
+        const maxW = 600; const s = Math.min(1, maxW / (img.naturalWidth || 1));
+        resolve({ w: Math.max(40, Math.round((img.naturalWidth || 400) * s)), h: Math.max(40, Math.round((img.naturalHeight || 300) * s)) });
+      };
+      img.onerror = () => resolve({ w: 400, h: 300 });
+      img.src = url;
+    });
+
+    const container = boardRef.current; const cw = container?.clientWidth ?? 1200; const ch = container?.clientHeight ?? 800;
+    const centerX = (cw / 2 - dims.w / 2) / (scale || 1); const centerY = (ch / 2 - dims.h / 2) / (scale || 1);
+    setItems((prev) => {
+      const maxZ = prev.reduce((m, it) => Math.max(m, it.z || 0), 0);
+      const id = `item-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+      const item: BoardItem = { id, type: 'image', x: Math.round(centerX), y: Math.round(centerY), w: dims.w, h: dims.h, url, name, z: maxZ + 1 };
+      const next: BoardItem[] = [...prev, item];
+      pushHistory({ items: next, background, scale, zones });
+      return next;
+    });
+  }, [scale, background, pushHistory, zones]);
+
+  const addText = useCallback(() => {
+    const el = boardRef.current; const cw = el?.clientWidth ?? 1200; const ch = el?.clientHeight ?? 800; const w = 240, h = 80;
+    const centerX = (cw / 2 - w / 2) / (scale || 1); const centerY = (ch / 2 - h / 2) / (scale || 1);
+    setItems((prev) => {
+      const maxZ = prev.reduce((m, it) => Math.max(m, it.z || 0), 0);
+      const id = `text-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+      const item: BoardItem = { id, type: 'text', x: Math.round(centerX), y: Math.round(centerY), w, h, text: 'Double-click to edit', z: maxZ + 1 };
+      const next: BoardItem[] = [...prev, item];
+      pushHistory({ items: next, background, scale, zones });
+      return next;
+    });
+  }, [scale, background, pushHistory, zones]);
+
+  const setBackgroundImage = useCallback((url: string, name?: string) => { setBackground({ url, name, fit: 'cover' }); pushHistory(); }, [pushHistory]);
+  
+  const handleExport = useCallback(async () => {
+    if (!boardRef.current) return;
+    try {
+      const dataUrl = await toPng(boardRef.current, { cacheBust: true, backgroundColor: '#ffffff' });
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = 'moodboard.png';
+      a.click();
+    } catch (e) {
+      console.error('Export failed', e);
+    }
+  }, []);
+
+  const handleExportPDF = useCallback(async () => {
+    if (!boardRef.current) return;
+    try {
+      const dataUrl = await toPng(boardRef.current, { cacheBust: true, backgroundColor: '#ffffff' });
+      const pdf = new jsPDF('landscape', 'mm', 'a4');
+      const imgWidth = 297;
+      const imgHeight = 210;
+      pdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save('moodboard.pdf');
+    } catch (e) {
+      console.error('PDF export failed', e);
+    }
+  }, []);
+
+  const handleSave = useCallback(() => {
+    try {
+      const payload = {
+        items,
+        background,
+        scale,
+        horizon,
+        wallStyle,
+        floorStyle,
+        wallMask,
+        floorMask,
+        zones,
+        template: template ? { id: template.id, name: template.name } : null,
+      };
+      localStorage.setItem('moodboard_snapshot', JSON.stringify(payload));
+      alert('Mood board saved successfully!');
+    } catch {
+      alert('Failed to save mood board');
+    }
+  }, [items, background, scale, horizon, wallStyle, floorStyle, wallMask, floorMask, zones, template]);
+
+  const handleLoad = useCallback(() => {
+    try {
+      const raw = localStorage.getItem('moodboard_snapshot');
+      if (!raw) return;
+      const data = JSON.parse(raw || '{}');
+      const { items: its, background: bg, scale: sc, horizon: hz, wallStyle: ws, floorStyle: fs, wallMask: wm, floorMask: fm, zones: zs } = data;
+      if (Array.isArray(its)) setItems(its);
+      if (bg && typeof bg === 'object') setBackground(bg);
+      if (typeof sc === 'number') setScale(sc);
+      if (typeof hz === 'number') setHorizon(hz);
+      if (ws && typeof ws === 'object') setWallStyle(() => ({ ...ws }));
+      if (fs && typeof fs === 'object') setFloorStyle(() => ({ ...fs }));
+      if (wm && Array.isArray(wm.points)) setWallMask({ points: wm.points });
+      if (fm && Array.isArray(fm.points)) setFloorMask({ points: fm.points });
+      if (Array.isArray(zs)) setZones(zs);
+    } catch {}
+  }, []);
+
+  const handleClear = useCallback(() => { setItems(() => { const next: BoardItem[] = []; pushHistory({ items: next, background, scale, zones }); return next; }); setSelectedId(null); }, [pushHistory, background, scale, zones]);
+  const handleReset = useCallback(() => { try { localStorage.removeItem('moodboard_snapshot'); sessionStorage.removeItem('selectedTemplate'); sessionStorage.removeItem('uploadedRoomImage'); } catch {} setItems(() => { const next: BoardItem[] = []; pushHistory({ items: next, background: { url: null, name: null, fit: 'cover' }, scale: 1, zones: [] }); return next; }); setSelectedId(null); setBackground({ url: null, name: null, fit: 'cover' }); setScale(1); setZones([]); setTemplate(null); }, [pushHistory]);
+
+  const onBoardDragOver = useCallback((e: React.DragEvent) => {
+    if (e.dataTransfer.types.includes('application/x-moodboard-item') || e.dataTransfer.types.includes('text/uri-list')) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+    }
+  }, []);
+
+  const onBoardDrop = useCallback(async (e: React.DragEvent) => {
+    if (!boardRef.current) return;
+    e.preventDefault();
+    const rect = boardRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / (scale || 1);
+    const y = (e.clientY - rect.top) / (scale || 1);
+    try {
+      const payload = e.dataTransfer.getData('application/x-moodboard-item');
+      if (payload) {
+        const { url, name } = JSON.parse(payload) as { url: string; name?: string; category?: string };
+        await addImageAt(url, name, { x, y });
+        return;
+      }
+    } catch {}
+    const uri = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+    if (uri) await addImageAt(uri, undefined, { x, y });
+  }, [scale, addImageAt]);
+
+  const onBoardClickForMask = useCallback((e: React.MouseEvent) => {
+    if (!maskMode || !boardRef.current) return;
+    const rect = boardRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / (scale || 1);
+    const y = (e.clientY - rect.top) / (scale || 1);
+    setMaskDraft((prev) => [...prev, { x, y }]);
+  }, [maskMode, scale]);
+
+  const onBoardDoubleClick = useCallback(() => {
+    if (!maskMode) return;
+    if (maskDraft.length >= 3) {
+      if (maskMode === 'wall') setWallMask({ points: maskDraft });
+      if (maskMode === 'floor') setFloorMask({ points: maskDraft });
+    }
+    setMaskDraft([]);
+    setMaskMode(null);
+  }, [maskMode, maskDraft]);
+
+  const zoomIn = useCallback(() => setScale((s) => Math.min(3, +(s + 0.1).toFixed(2))), []);
+  const zoomOut = useCallback(() => setScale((s) => Math.max(0.2, +(s - 0.1).toFixed(2))), []);
+  const zoomToFit = useCallback(() => { const el = boardRef.current; if (!el || !items.length) return setScale(1); const cw = el.clientWidth, ch = el.clientHeight; let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity; for (const it of items) { minX = Math.min(minX, it.x); minY = Math.min(minY, it.y); maxX = Math.max(maxX, it.x + it.w); maxY = Math.max(maxY, it.y + it.h); } const bw = Math.max(1, maxX - minX), bh = Math.max(1, maxY - minY), padding = 40; const s = Math.min((cw - padding) / bw, (ch - padding) / bh); setScale(() => Math.max(0.2, Math.min(3, +s.toFixed(2)))); }, [items]);
+
+  useEffect(() => { const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelectedId(null); if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) { setItems((prev) => prev.filter((it) => it.id !== selectedId)); setSelectedId(null); } if (e.key === '+' || (e.key === '=' && (e.ctrlKey || e.metaKey))) { e.preventDefault(); zoomIn(); } if (e.key === '-' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); zoomOut(); } }; window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey); }, [selectedId, zoomIn, zoomOut]);
+  
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!maskMode) return;
+      if (e.key.toLowerCase() === 'z' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setMaskDraft((prev) => prev.slice(0, -1));
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (maskDraft.length >= 3) {
+          if (maskMode === 'wall') setWallMask({ points: maskDraft });
+          if (maskMode === 'floor') setFloorMask({ points: maskDraft });
+        }
+        setMaskDraft([]);
+        setMaskMode(null);
+      }
+      if (e.key === 'Escape') {
+        setMaskDraft([]);
+        setMaskMode(null);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [maskMode, maskDraft]);
+
+  const onWheel = useCallback((e: React.WheelEvent) => { if (e.ctrlKey) { e.preventDefault(); setScale((s) => Math.max(0.2, Math.min(3, +(s + (-e.deltaY / 500)).toFixed(2)))) } }, []);
+  const snapN = useCallback((n: number) => (snap ? Math.round(n / gridSize) * gridSize : n), [snap, gridSize]);
+  const bringToFront = useCallback(() => { if (!selectedId) return; setItems((prev) => { const maxZ = prev.reduce((m, it) => Math.max(m, it.z || 0), 0); const next = prev.map((it) => (it.id === selectedId ? { ...it, z: maxZ + 1 } : it)); pushHistory({ items: next, background, scale, zones }); return next; }); }, [selectedId, pushHistory, background, scale, zones]);
+  const sendToBack = useCallback(() => { if (!selectedId) return; setItems((prev) => { const minZ = prev.reduce((m, it) => Math.min(m, it.z || 0), 0); const next = prev.map((it) => (it.id === selectedId ? { ...it, z: minZ - 1 } : it)); pushHistory({ items: next, background, scale, zones }); return next; }); }, [selectedId, pushHistory, background, scale, zones]);
+  const toggleLock = useCallback(() => { if (!selectedId) return; setItems((prev) => { const next = prev.map((it) => (it.id === selectedId ? { ...it, locked: !it.locked } : it)); pushHistory({ items: next, background, scale, zones }); return next; }); }, [selectedId, pushHistory, background, scale, zones]);
+  const duplicate = useCallback(() => { if (!selectedId) return; setItems((prev) => { const base = prev.find((i) => i.id === selectedId); if (!base) return prev; const maxZ = prev.reduce((m, it) => Math.max(m, it.z || 0), 0); const id = `dup-${Date.now()}-${Math.round(Math.random() * 1e6)}`; const next = [...prev, { ...base, id, x: base.x + 20, y: base.y + 20, z: maxZ + 1 }]; pushHistory({ items: next, background, scale, zones }); return next; }); }, [selectedId, pushHistory, background, scale, zones]);
+  const insertFromUrl = useCallback(async () => { const url = window.prompt('Paste image URL to insert'); if (url) await addImage(url, 'Custom'); }, [addImage]);
+  const alignCenter = useCallback((axis: 'x' | 'y') => { if (!selectedId || !boardRef.current) return; const cw = boardRef.current.clientWidth / (scale || 1); const ch = boardRef.current.clientHeight / (scale || 1); setItems((prev) => { const next = prev.map((it) => { if (it.id !== selectedId) return it; if (axis === 'x') return { ...it, x: Math.round((cw - it.w) / 2) }; return { ...it, y: Math.round((ch - it.h) / 2) }; }); pushHistory({ items: next, background, scale, zones }); return next; }); }, [selectedId, scale, pushHistory, background, zones]);
+  const rotateSelected = useCallback((deg: number) => { if (!selectedId) return; setItems((prev) => { const next = prev.map((it) => (it.id === selectedId ? { ...it, rotation: Math.max(-180, Math.min(180, Math.round(deg))) } : it)); pushHistory({ items: next, background, scale, zones }); return next; }); }, [selectedId, pushHistory, background, scale, zones]);
+
+  const applyCustomization = useCallback(() => {
+    if (!selectedId) return;
+    setItems((prev) => {
+      const next = prev.map((it) => {
+        if (it.id !== selectedId) return it;
+        return {
+          ...it,
+          color: customization.color || it.color,
+          material: customization.material || it.material,
+          w: customization.size?.width || it.w,
+          h: customization.size?.height || it.h,
+        };
+      });
+      pushHistory({ items: next, background, scale, zones });
+      return next;
+    });
+    setShowCustomization(false);
+  }, [selectedId, customization, pushHistory, background, scale, zones]);
+
+  const selectedItem = useMemo(() => items.find(it => it.id === selectedId), [items, selectedId]);
+
+  return (
+    <main className="h-[calc(100vh-var(--app-header-height))] bg-gray-50">
+      <div className="w-full h-full grid grid-cols-1 lg:grid-cols-[340px_1fr]">
+        <aside className="border-r border-gray-200 bg-white flex flex-col min-h-0">
+          <div className="h-14 flex items-center justify-between px-4 border-b border-gray-200 bg-white/90 backdrop-blur z-20">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-gray-900 text-white text-xs font-bold">NGC</span>
+              <div>
+                <div className="text-sm font-semibold text-gray-900">Product Library</div>
+                <div className="text-xs text-gray-500">Search and add to canvas</div>
+              </div>
+            </div>
+            <Link href="/moodboard/templates" className="text-xs font-medium text-gray-600 hover:text-gray-900">Templates</Link>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {template && (
+              <div className="p-3 border-b border-gray-200 bg-blue-50">
+                <div className="text-sm font-semibold text-gray-900 mb-1">Active Template</div>
+                <div className="text-xs text-gray-700">{template.name}</div>
+                <div className="text-xs text-gray-600 mt-1">{template.zones.length} product zones</div>
+                <button
+                  onClick={() => setShowZones(!showZones)}
+                  className="mt-2 px-2 py-1 text-xs border border-gray-300 rounded bg-white hover:bg-gray-50"
+                >
+                  {showZones ? 'Hide' : 'Show'} Zones
+                </button>
+              </div>
+            )}
+
+            <div className="p-3 border-b border-gray-200 bg-white/70">
+              <div className="text-sm font-semibold text-gray-900 mb-2">Upload Room Image</div>
+              <input
+                type="file"
+                accept="image/*"
+                className="block w-full text-xs text-gray-700 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-gray-300 file:bg-white file:text-gray-800 hover:file:bg-gray-50"
+                onChange={async (e) => {
+                  const f = e.currentTarget.files?.[0];
+                  if (!f) return;
+                  try {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      const url = String(reader.result || '');
+                      setBackground({ url, name: f.name, fit: 'cover' });
+                      pushHistory();
+                    };
+                    reader.readAsDataURL(f);
+                  } catch {}
+                }}
+              />
+            </div>
+
+            <div className="p-3 border-b border-gray-200 bg-white/70 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-semibold text-gray-900">Wall & Floor</div>
+                <div className="text-xs text-gray-500">Horizon: {horizon}%</div>
+              </div>
+              <input type="range" min={20} max={80} value={horizon} onChange={(e) => setHorizon(parseInt(e.target.value, 10))} className="w-full" />
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <div className="text-xs font-medium text-gray-700 mb-1">Wall Color</div>
+                  <input type="color" value={wallStyle.color || '#ffffff'} onChange={(e) => setWallStyle((s) => ({ ...s, color: e.target.value }))} />
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-gray-700 mb-1">Wall Opacity</div>
+                  <input type="range" min={0} max={100} value={Math.round((wallStyle.opacity || 0) * 100)} onChange={(e) => setWallStyle((s) => ({ ...s, opacity: Math.round(Number(e.target.value)) / 100 }))} />
+                </div>
+                <div className="col-span-2 flex items-center gap-3">
+                  <button className="px-2 py-1 border border-gray-300 rounded bg-white text-xs" onClick={() => { setMaskMode('wall'); setMaskDraft([]); }}>Edit Wall Mask</button>
+                  <button className="px-2 py-1 border border-gray-300 rounded bg-white text-xs" onClick={() => setWallMask({ points: [] })}>Clear Wall Mask</button>
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-gray-700 mb-1">Floor Color</div>
+                  <input type="color" value={floorStyle.color || '#eaeaea'} onChange={(e) => setFloorStyle((s) => ({ ...s, color: e.target.value }))} />
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-gray-700 mb-1">Floor Opacity</div>
+                  <input type="range" min={0} max={100} value={Math.round((floorStyle.opacity || 0) * 100)} onChange={(e) => setFloorStyle((s) => ({ ...s, opacity: Math.round(Number(e.target.value)) / 100 }))} />
+                </div>
+                <div className="col-span-2 flex items-center gap-3">
+                  <button className="px-2 py-1 border border-gray-300 rounded bg-white text-xs" onClick={() => { setMaskMode('floor'); setMaskDraft([]); }}>Edit Floor Mask</button>
+                  <button className="px-2 py-1 border border-gray-300 rounded bg-white text-xs" onClick={() => setFloorMask({ points: [] })}>Clear Floor Mask</button>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-700 mb-1 block">Wall Texture Repeat</label>
+                  <input type="checkbox" checked={!!wallStyle.repeat} onChange={(e) => setWallStyle((s) => ({ ...s, repeat: e.target.checked }))} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-700 mb-1 block">Floor Texture Repeat</label>
+                  <input type="checkbox" checked={!!floorStyle.repeat} onChange={(e) => setFloorStyle((s) => ({ ...s, repeat: e.target.checked }))} />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 border-b border-gray-200 bg-white/70 space-y-2">
+              <div className="text-sm font-semibold text-gray-900">Walls & Floors from Products</div>
+              <div className="text-xs text-gray-600">Pick any product image to apply as a wall or floor texture.</div>
+              <div className="grid grid-cols-2 gap-3">
+                {allProducts.filter(p => /wall|floor|tile|carpet/i.test(p.category || '')).slice(0, 8).map(p => (
+                  <div key={p.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                    <div className="aspect-[4/3] relative bg-gray-100">
+                      <NextImage src={p.image} alt={p.name} fill sizes="200px" className="object-cover" />
+                    </div>
+                    <div className="p-2 flex items-center justify-between gap-2">
+                      <button className="flex-1 px-2 py-1 text-[11px] border border-gray-300 rounded-full bg-white hover:bg-gray-50" onClick={() => setWallStyle((s) => ({ ...s, texture: p.image, color: null }))}>Apply to Wall</button>
+                      <button className="flex-1 px-2 py-1 text-[11px] border border-gray-300 rounded-full bg-white hover:bg-gray-50" onClick={() => setFloorStyle((s) => ({ ...s, texture: p.image, color: null }))}>Apply to Floor</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <ProductLibrary onInsert={mounted ? addImage : undefined} onSetBackground={mounted ? setBackgroundImage : undefined} disabled={!mounted} />
+          </div>
+        </aside>
+
+        <section className="relative bg-white min-h-0">
+          <div className="absolute inset-x-0 top-0 z-40">
+            <div className="bg-gradient-to-b from-white/95 to-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-b border-gray-200 shadow-sm">
+              <div className="px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+                <div className="flex items-baseline gap-3">
+                  <h1 className="text-base md:text-lg font-semibold text-gray-900">Moodboard Editor</h1>
+                  <span className="hidden md:inline text-xs text-gray-500">Design your space with products and templates</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button className="px-2.5 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-xs" onClick={undo} title="Undo">Undo</button>
+                  <button className="px-2.5 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-xs" onClick={redo} title="Redo">Redo</button>
+                  <button className="px-2.5 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-xs" onClick={addText} title="Add Text">Text</button>
+                  <button className="px-2.5 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-xs" onClick={insertFromUrl} title="Insert Image by URL">Insert URL</button>
+                  {selectedId && (
+                    <button className="px-2.5 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-xs" onClick={() => setShowCustomization(true)} title="Customize">Customize</button>
+                  )}
+                  <span className="mx-1 h-5 w-px bg-gray-300" />
+                  <button className="px-2.5 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800" onClick={zoomOut} title="Zoom out" aria-label="Zoom out"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+                  <button className="px-2.5 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800" onClick={zoomIn} title="Zoom in" aria-label="Zoom in"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+                  <button className="px-3 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-xs" onClick={zoomToFit}>Fit</button>
+                  <span className="mx-1 h-5 w-px bg-gray-300" />
+                  <div className="relative">
+                    <button className="px-3 py-1.5 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-xs" onClick={() => setShowFileMenu((v) => !v)} aria-haspopup="menu" aria-expanded={showFileMenu}>File ▾</button>
+                    {showFileMenu ? (
+                      <div className="absolute right-0 mt-1 w-40 rounded-md border border-gray-200 bg-white shadow-lg z-50">
+                        <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50" onClick={() => { setShowFileMenu(false); setShowExportModal(true); }}>Export</button>
+                        <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50" onClick={() => { setShowFileMenu(false); handleSave(); }}>Save</button>
+                        <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50" onClick={() => { setShowFileMenu(false); handleLoad(); }}>Load</button>
+                        <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50" onClick={() => { setShowFileMenu(false); setShowShareModal(true); }}>Share</button>
+                        <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50" onClick={() => { setShowFileMenu(false); handleClear(); }}>Clear</button>
+                        <button className="w-full text-left px-3 py-2 text-sm text-rose-700 hover:bg-rose-50" onClick={() => { setShowFileMenu(false); handleReset(); }}>Reset</button>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute inset-x-0 bottom-0 z-40">
+            <div className="bg-gradient-to-t from-white/95 to-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-t border-gray-200">
+              <div className="px-4 sm:px-6 lg:px-8 py-2 text-xs text-gray-700 flex items-center justify-between gap-3">
+                <div className="hidden md:flex items-center gap-3 text-gray-600">
+                  <span className="font-medium">Design your space with products and templates</span>
+                  <span className="text-gray-300">·</span>
+                  <span>ESC deselect</span>
+                  <span className="text-gray-300">·</span>
+                  <span>Ctrl+Scroll to zoom</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="inline-flex items-center gap-2 px-2 py-1 border border-gray-300 rounded-full bg-white"><input type="checkbox" checked={snap} onChange={(e) => setSnap(e.target.checked)} /> Snap</label>
+                  <label className="inline-flex items-center gap-1 px-2 py-1 border border-gray-300 rounded-full bg-white">Grid<input type="number" className="w-14 border border-gray-200 rounded px-1 py-0.5" value={gridSize} min={5} max={100} step={5} onChange={(e) => setGridSize(Math.max(5, Math.min(100, Number(e.target.value)||20)))} /></label>
+                  <div className="hidden sm:flex items-center gap-1 px-2 py-1 border border-gray-300 rounded-full bg-white"><span>Rotate</span><input type="range" min={-180} max={180} step={1} disabled={!selectedId} className="w-24" onChange={(e) => rotateSelected(Number(e.currentTarget.value))} /></div>
+                  <span className="mx-1 h-5 w-px bg-gray-300" />
+                  <button className="px-3 py-1 rounded-full border border-gray-300 bg-white text-gray-800 disabled:opacity-50" disabled={!selectedId} onClick={() => alignCenter('x')}>Align H</button>
+                  <button className="px-3 py-1 rounded-full border border-gray-300 bg-white text-gray-800 disabled:opacity-50" disabled={!selectedId} onClick={() => alignCenter('y')}>Align V</button>
+                  <button className="px-3 py-1 rounded-full border border-gray-300 bg-white text-gray-800 disabled:opacity-50" disabled={!selectedId} onClick={bringToFront}>Front</button>
+                  <button className="px-3 py-1 rounded-full border border-gray-300 bg-white text-gray-800 disabled:opacity-50" disabled={!selectedId} onClick={sendToBack}>Back</button>
+                  <button className="px-3 py-1 rounded-full border border-gray-300 bg-white text-gray-800 disabled:opacity-50" disabled={!selectedId} onClick={toggleLock}>Lock/Unlock</button>
+                  <button className="px-3 py-1 rounded-full border border-gray-300 bg-white text-gray-800 disabled:opacity-50" disabled={!selectedId} onClick={duplicate}>Duplicate</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-16 pb-12 h-full" onMouseDown={(e) => { if (e.target === boardRef.current) setSelectedId(null); }}>
+            {!mounted ? (
+              <div className="w-full h-full p-8">
+                <div className="animate-pulse space-y-4">
+                  <div className="h-8 w-1/3 bg-gray-200 rounded" />
+                  <div className="h-64 bg-gray-200 rounded" />
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="h-24 bg-gray-200 rounded" />
+                    <div className="h-24 bg-gray-200 rounded" />
+                    <div className="h-24 bg-gray-200 rounded" />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div ref={boardRef} onWheel={onWheel} className="relative w-full h-full overflow-hidden bg-white">
+                {showIntro ? (
+                  <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-6">
+                    <div className="max-w-xl w-full bg-white rounded-xl shadow-lg p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Welcome to the Moodboard</h3>
+                      <ol className="text-sm text-gray-700 space-y-1 mb-4 list-decimal list-inside">
+                        <li>Browse the library and click Add to place images.</li>
+                        <li>Drag to move; drag corners to resize. Use Snap for tidy layout.</li>
+                        <li>Select an item to Align, reorder, Lock or Duplicate from the bottom bar.</li>
+                        <li>Use the File menu (top right) to Save, Load or Export your board.</li>
+                        <li>Click Templates to choose from pre-designed layouts with product zones.</li>
+                      </ol>
+                      <div className="flex justify-end gap-2">
+                        <button className="px-3 py-1.5 rounded-md border border-gray-300" onClick={() => setShowIntro(false)}>Close</button>
+                        <button className="px-3 py-1.5 rounded-md bg-gray-900 text-white" onClick={() => { try { localStorage.setItem('moodboard_intro_dismissed','1'); } catch {}; setShowIntro(false); }}>Got it</button>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+                <div className="absolute inset-0" style={{ backgroundImage: background.url ? `url(${background.url})` : undefined, backgroundSize: background.fit || 'cover', backgroundPosition: 'center', transform: `scale(${scale})`, transformOrigin: 'center center' }} />
+                {(() => {
+                  const wallHeight = `${horizon}%`;
+                  const floorTop = `${horizon}%`;
+                  const wallStyleCss: React.CSSProperties = {
+                    top: 0,
+                    height: wallHeight,
+                    left: 0,
+                    right: 0,
+                    backgroundColor: wallStyle.color || undefined,
+                    backgroundImage: wallStyle.texture ? `url(${wallStyle.texture})` : undefined,
+                    backgroundSize: wallStyle.repeat ? `${Math.round(100 * (wallStyle.textureScale || 1))}% auto` : 'cover',
+                    backgroundRepeat: wallStyle.repeat ? 'repeat' : 'no-repeat',
+                    opacity: wallStyle.opacity,
+                    pointerEvents: 'none',
+                    clipPath: wallMask.points.length >= 3 ? `polygon(${wallMask.points.map(pt => `${pt.x}px ${pt.y}px`).join(',')})` : undefined,
+                  };
+                  const floorStyleCss: React.CSSProperties = {
+                    top: floorTop,
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    backgroundColor: floorStyle.color || undefined,
+                    backgroundImage: floorStyle.texture ? `url(${floorStyle.texture})` : undefined,
+                    backgroundSize: floorStyle.repeat ? `${Math.round(100 * (floorStyle.textureScale || 1))}% auto` : 'cover',
+                    backgroundRepeat: floorStyle.repeat ? 'repeat' : 'no-repeat',
+                    opacity: floorStyle.opacity,
+                    pointerEvents: 'none',
+                    clipPath: floorMask.points.length >= 3 ? `polygon(${floorMask.points.map(pt => `${pt.x}px ${pt.y}px`).join(',')})` : undefined,
+                  };
+                  return (
+                    <>
+                      <div className="absolute" style={wallStyleCss} />
+                      <div className="absolute" style={floorStyleCss} />
+                    </>
+                  );
+                })()}
+                {snap ? (<div className="absolute inset-0 pointer-events-none" style={{ backgroundSize: `${gridSize}px ${gridSize}px`, backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.06) 1px, transparent 1px)`, transform: `scale(${scale})`, transformOrigin: 'center center' }} />) : null}
+                
+                {showZones && zones.length > 0 && (
+                  <div className="absolute inset-0 pointer-events-none" style={{ transform: `scale(${scale})`, transformOrigin: 'center center' }}>
+                    {zones.map((zone) => {
+                      const zoneStyle: React.CSSProperties = {
+                        position: 'absolute',
+                        left: `${zone.x}%`,
+                        top: `${zone.y}%`,
+                        width: `${zone.width}%`,
+                        height: `${zone.height}%`,
+                        border: selectedZoneId === zone.id ? '3px dashed #2563eb' : '2px dashed rgba(0,0,0,0.3)',
+                        backgroundColor: selectedZoneId === zone.id ? 'rgba(37, 99, 235, 0.1)' : 'rgba(0,0,0,0.05)',
+                        pointerEvents: 'auto',
+                        cursor: 'pointer',
+                      };
+                      return (
+                        <div
+                          key={zone.id}
+                          style={zoneStyle}
+                          onClick={() => setSelectedZoneId(zone.id === selectedZoneId ? null : zone.id)}
+                          title={zone.label}
+                        >
+                          <div className="absolute top-1 left-1 bg-white/90 px-2 py-1 rounded text-xs font-medium text-gray-900">
+                            {zone.label}
+                          </div>
+                          {zone.category && (
+                            <div className="absolute bottom-1 left-1 bg-white/90 px-2 py-0.5 rounded text-[10px] text-gray-600">
+                              {zone.category}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div
+                  className="absolute inset-0"
+                  onDragOver={onBoardDragOver}
+                  onDrop={onBoardDrop}
+                  onClick={onBoardClickForMask}
+                  onDoubleClick={onBoardDoubleClick}
+                  style={{ transform: `scale(${scale})`, transformOrigin: 'center center' }}
+                >
+                  {maskMode && maskDraft.length ? (
+                    <svg className="absolute inset-0" width="100%" height="100%" style={{ pointerEvents: 'none' }}>
+                      <polyline
+                        points={maskDraft.map((p) => `${p.x},${p.y}`).join(' ')}
+                        fill="none"
+                        stroke={maskMode === 'wall' ? 'rgba(37, 99, 235, 0.8)' : 'rgba(16, 185, 129, 0.8)'}
+                        strokeWidth={2}
+                      />
+                      {maskDraft.map((p, i) => (
+                        <circle key={i} cx={p.x} cy={p.y} r={3} fill={maskMode === 'wall' ? '#2563eb' : '#10b981'} />
+                      ))}
+                    </svg>
+                  ) : null}
+                  {items.slice().sort((a, b) => (a.z || 0) - (b.z || 0)).map((it) => (
+                    <Rnd key={it.id} bounds="parent" size={{ width: it.w, height: it.h }} position={{ x: it.x, y: it.y }} onDragStart={() => setSelectedId(it.id)}
+                      onDragStop={(e, d) => setItems((prev) => { const next = prev.map((p) => (p.id === it.id ? { ...p, x: snapN(Math.round(d.x)), y: snapN(Math.round(d.y)) } : p)); pushHistory({ items: next, background, scale, zones }); return next; })}
+                      onResizeStop={(e, dir, ref, delta, pos) => setItems((prev) => { const next = prev.map((p) => (p.id === it.id ? { ...p, w: snapN(Math.round(ref.offsetWidth)), h: snapN(Math.round(ref.offsetHeight)), x: snapN(Math.round(pos.x)), y: snapN(Math.round(pos.y)) } : p)); pushHistory({ items: next, background, scale, zones }); return next; })}
+                      enableResizing={{ top:true, right:true, bottom:true, left:true, topRight:true, bottomRight:true, bottomLeft:true, topLeft:true }} style={{ zIndex: it.z || 0 }} scale={scale} disableDragging={it.locked} enableUserSelectHack={false}>
+                      <div onMouseDown={() => setSelectedId(it.id)} className={`relative w-full h-full select-none ${selectedId === it.id ? 'ring-2 ring-gray-900 ring-offset-2 ring-offset-white' : ''}`} style={{ transform: `rotate(${it.rotation || 0}deg)`, filter: it.color ? `hue-rotate(${it.color})` : undefined }}>
+                        {it.type === 'image' && it.url ? (
+                          <NextImage src={it.url} alt={it.name || 'Image'} fill className="object-contain pointer-events-none" />
+                        ) : null}
+                        {it.type === 'text' ? (
+                          <textarea defaultValue={it.text || ''} onBlur={(e) => setItems((prev) => prev.map((p) => (p.id === it.id ? { ...p, text: e.currentTarget.value } : p)))} className="w-full h-full resize-none outline-none bg-transparent text-gray-900 p-2 text-center" style={{ fontSize: '20px' }} />
+                        ) : null}
+                        {selectedId === it.id ? (<button onClick={(e) => { e.stopPropagation(); setItems((prev) => prev.filter((p) => p.id !== it.id)); if (selectedId === it.id) setSelectedId(null); }} className="absolute -top-3 -right-3 h-6 w-6 rounded-full bg-white border border-gray-300 text-gray-700 shadow flex items-center justify-center text-xs" title="Delete">×</button>) : null}
+                      </div>
+                    </Rnd>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {showCustomization && selectedItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setShowCustomization(false)}>
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">Customize Product</h2>
+              <p className="text-sm text-gray-600 mt-1">{selectedItem.name || 'Selected Item'}</p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Color Adjustment</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="360"
+                  value={customization.color || '0'}
+                  onChange={(e) => setCustomization(prev => ({ ...prev, color: e.target.value }))}
+                  className="w-full"
+                />
+                <p className="text-xs text-gray-500 mt-1">Hue rotation: {customization.color || 0}°</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Material</label>
+                <select
+                  value={customization.material || ''}
+                  onChange={(e) => setCustomization(prev => ({ ...prev, material: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                >
+                  <option value="">Default</option>
+                  <option value="wood">Wood</option>
+                  <option value="metal">Metal</option>
+                  <option value="leather">Leather</option>
+                  <option value="fabric">Fabric</option>
+                  <option value="glass">Glass</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Size</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-600">Width</label>
+                    <input
+                      type="number"
+                      value={customization.size?.width || selectedItem.w}
+                      onChange={(e) => setCustomization(prev => ({ ...prev, size: { ...prev.size, width: Number(e.target.value), height: prev.size?.height || selectedItem.h } }))}
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600">Height</label>
+                    <input
+                      type="number"
+                      value={customization.size?.height || selectedItem.h}
+                      onChange={(e) => setCustomization(prev => ({ ...prev, size: { width: prev.size?.width || selectedItem.w, height: Number(e.target.value) } }))}
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex gap-3">
+              <button
+                onClick={() => setShowCustomization(false)}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={applyCustomization}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-black"
+              >
+                Apply Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showExportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setShowExportModal(false)}>
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">Export Mood Board</h2>
+              <p className="text-sm text-gray-600 mt-1">Choose your export format</p>
+            </div>
+            <div className="p-6 space-y-3">
+              <button
+                onClick={() => { handleExport(); setShowExportModal(false); }}
+                className="w-full px-4 py-3 text-left border-2 border-gray-300 rounded-lg hover:border-gray-900 hover:bg-gray-50 transition-all"
+              >
+                <div className="font-medium text-gray-900">Export as PNG</div>
+                <div className="text-sm text-gray-600">High-resolution image file</div>
+              </button>
+              <button
+                onClick={() => { handleExportPDF(); setShowExportModal(false); }}
+                className="w-full px-4 py-3 text-left border-2 border-gray-300 rounded-lg hover:border-gray-900 hover:bg-gray-50 transition-all"
+              >
+                <div className="font-medium text-gray-900">Export as PDF</div>
+                <div className="text-sm text-gray-600">Printable document format</div>
+              </button>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200">
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showShareModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setShowShareModal(false)}>
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">Share Mood Board</h2>
+              <p className="text-sm text-gray-600 mt-1">Share on social media</p>
+            </div>
+            <div className="p-6 space-y-3">
+              <button
+                onClick={async () => {
+                  if (!boardRef.current) return;
+                  try {
+                    await toPng(boardRef.current, { cacheBust: true, backgroundColor: '#ffffff' });
+                    const text = 'Check out my mood board created with NGC! #InteriorDesign #MoodBoard #NGC';
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(text)}`, '_blank');
+                  } catch (e) {
+                    console.error('Share failed', e);
+                  }
+                }}
+                className="w-full px-4 py-3 text-left border-2 border-gray-300 rounded-lg hover:border-blue-600 hover:bg-blue-50 transition-all flex items-center gap-3"
+              >
+                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">f</div>
+                <div>
+                  <div className="font-medium text-gray-900">Facebook</div>
+                  <div className="text-sm text-gray-600">Share on Facebook</div>
+                </div>
+              </button>
+              <button
+                onClick={async () => {
+                  if (!boardRef.current) return;
+                  try {
+                    await toPng(boardRef.current, { cacheBust: true, backgroundColor: '#ffffff' });
+                    const text = 'Check out my mood board! #InteriorDesign #MoodBoard #NGC';
+                    window.open(`https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(window.location.href)}&description=${encodeURIComponent(text)}`, '_blank');
+                  } catch (e) {
+                    console.error('Share failed', e);
+                  }
+                }}
+                className="w-full px-4 py-3 text-left border-2 border-gray-300 rounded-lg hover:border-red-600 hover:bg-red-50 transition-all flex items-center gap-3"
+              >
+                <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white font-bold">P</div>
+                <div>
+                  <div className="font-medium text-gray-900">Pinterest</div>
+                  <div className="text-sm text-gray-600">Pin to Pinterest</div>
+                </div>
+              </button>
+              <button
+                onClick={async () => {
+                  if (!boardRef.current) return;
+                  try {
+                    const dataUrl = await toPng(boardRef.current, { cacheBust: true, backgroundColor: '#ffffff' });
+                    const a = document.createElement('a');
+                    a.href = dataUrl;
+                    a.download = 'moodboard-for-instagram.png';
+                    a.click();
+                    alert('Image downloaded! You can now upload it to Instagram with hashtags: #InteriorDesign #MoodBoard #NGC');
+                  } catch (e) {
+                    console.error('Share failed', e);
+                  }
+                }}
+                className="w-full px-4 py-3 text-left border-2 border-gray-300 rounded-lg hover:border-pink-600 hover:bg-pink-50 transition-all flex items-center gap-3"
+              >
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white font-bold">IG</div>
+                <div>
+                  <div className="font-medium text-gray-900">Instagram</div>
+                  <div className="text-sm text-gray-600">Download for Instagram</div>
+                </div>
+              </button>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200">
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}
+
+export default function MoodboardEditorPage() {
+  return (
+    <Suspense fallback={<main className="h-[calc(100vh-var(--app-header-height))] bg-gray-50"><div className="w-full h-full flex items-center justify-center text-gray-600">Loading…</div></main>}>
+      <MoodboardEditorInner />
+    </Suspense>
   );
 }
