@@ -43,9 +43,15 @@ export default function RootLayout({
       <body
         className={`${helveticaNeue.variable} ${bilderberg.variable} font-sans antialiased`}
       >
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:bg-black focus:text-white focus:px-4 focus:py-2 focus:rounded"
+        >
+          Skip to content
+        </a>
         <SmoothScroll />
         <Navbar />
-        <main>{children}</main>
+        <main id="main-content" role="main">{children}</main>
         <Footer />
       </body>
     </html>

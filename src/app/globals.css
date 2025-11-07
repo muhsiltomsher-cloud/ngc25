@@ -71,3 +71,101 @@ body {
   /* Push all content below the fixed header across the whole site */
   padding-top: var(--app-header-height);
 }
+
+/* Global: remove default focus outline/ring across site */
+/* Note: this reduces keyboard accessibility. If you want a keyboard-only
+   indicator, prefer :focus-visible with a custom outline instead. */
+*:focus,
+*:focus-visible,
+a:focus,
+button:focus,
+[role="button"]:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  /* Neutralize Tailwind ring variables on focus */
+  --tw-ring-color: transparent !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+}
+
+/* Remove tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* High-contrast mode: re-enable strong focus and colors */
+html[data-contrast='high'] *:focus-visible {
+  outline: 3px solid #000 !important;
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px #000 !important;
+}
+html[data-contrast='high'] body {
+  color: #111;
+  background: #fff;
+}
+html[data-contrast='high'] a { color: #0b61a4; }
+html[data-contrast='high'] .btn, html[data-contrast='high'] button { border-color: #111 !important; }
+
+/* Dark mode (limited, page-level) */
+html[data-theme='dark'] body {
+  background: #0b0d10;
+  color: #e5e7eb;
+  color-scheme: dark;
+}
+/* Surfaces */
+html[data-theme='dark'] .bg-white { background-color: #0f1217 !important; }
+html[data-theme='dark'] .bg-white\/90 { background-color: rgba(15,18,23,.9) !important; }
+html[data-theme='dark'] .bg-white\/80 { background-color: rgba(15,18,23,.8) !important; }
+html[data-theme='dark'] .bg-white\/70 { background-color: rgba(15,18,23,.7) !important; }
+html[data-theme='dark'] .bg-gray-50 { background-color: #111418 !important; }
+html[data-theme='dark'] .bg-slate-50 { background-color: #0f1217 !important; }
+html[data-theme='dark'] .bg-slate-100 { background-color: #12161c !important; }
+/* Kill light gradients on product pages */
+html[data-theme='dark'] .bg-gradient-to-br { background-image: none !important; background-color: #0b0d10 !important; }
+
+/* Borders */
+html[data-theme='dark'] .border-slate-200, html[data-theme='dark'] .border-slate-200\/60 { border-color: #2b3440 !important; }
+html[data-theme='dark'] .border-gray-200 { border-color: #2b3440 !important; }
+html[data-theme='dark'] .border-gray-300 { border-color: #3b4553 !important; }
+
+/* Text */
+html[data-theme='dark'] .text-slate-900, html[data-theme='dark'] .text-gray-900 { color: #e5e7eb !important; }
+html[data-theme='dark'] .text-slate-800, html[data-theme='dark'] .text-gray-800 { color: #e2e8f0 !important; }
+html[data-theme='dark'] .text-slate-700, html[data-theme='dark'] .text-gray-700 { color: #d1d5db !important; }
+html[data-theme='dark'] .text-slate-600, html[data-theme='dark'] .text-gray-600 { color: #cbd5e1 !important; }
+html[data-theme='dark'] .text-slate-500, html[data-theme='dark'] .text-gray-500 { color: #94a3b8 !important; }
+
+/* Links */
+html[data-theme='dark'] a { color: #93c5fd; }
+html[data-theme='dark'] a:hover { color: #bfdbfe; }
+
+/* Rings commonly used in product gallery */
+html[data-theme='dark'] .ring-slate-900\/5 { --tw-ring-color: rgba(255,255,255,.06) !important; }
+
+/* Dark mode: ensure gradient text (bg-clip-text + text-transparent) remains readable */
+html[data-theme='dark'] [class*="bg-clip-text"][class*="text-transparent"][class*="bg-gradient-to-"] {
+  /* Force a light gradient fill for text in dark mode */
+  background-image: linear-gradient(
+    to var(--tw-gradient-position, bottom right),
+    #f8fafc, /* slate-50 */
+    #e2e8f0, /* slate-200 */
+    #cbd5e1  /* slate-300 */
+  ) !important;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Larger text */
+html[data-text-size='large'] body { font-size: 18px; }
+
+/* Underline links */
+html[data-underline-links='true'] a { text-decoration: underline !important; text-underline-offset: 2px; }
+
+/* Reduce motion */
+html[data-reduce-motion='true'] *, html[data-reduce-motion='true'] *::before, html[data-reduce-motion='true'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}

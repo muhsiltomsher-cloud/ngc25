@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { allProducts } from '../../data/productsData';
+import ProductContrastFab from '@/components/atoms/ProductContrastFab';
 
 export default function Page() {
   return (
     <main className="min-h-screen bg-gray-50">
+      <ProductContrastFab />
       <section className="w-full max-w-[1100px] mx-auto px-4 py-10">
         <div className="mb-6 text-sm text-gray-600">
           <Link href="/">Home</Link>

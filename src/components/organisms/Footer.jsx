@@ -8,18 +8,22 @@ const sitemap1 = [
   { label: "HOME", href: "/" },
   { label: "ABOUT US", href: "/about" },
   { label: "PROJECTS", href: "/projects" },
-  { label: "CONTACT US", href: "/contact" },
+  { label: "CONTACT US", href: "/support/contact" },
   { label: "STORE LOCATOR", href: "/store-locator" },
+  { label: "NEWS & PRESS", href: "/support/news" },
+  { label: "MEDIA", href: "/media" },
+  { label: "BLOG", href: "/blog" },
   { label: "FAQ", href: "/faq" },
   { label: "TERMS AND CONDITIONS", href: "/terms" },
 ];
 
 const sitemap2 = [
   { label: "WALLS", href: "/walls" },
-  { label: "QUICKSHIP", href: "/quickship" },
-  { label: "KIDS", href: "/kids" },
+  { label: "QUICKSHIP INFO", href: "/quickship/info" },
+  { label: "START QUICKSHIP ORDER", href: "/quickship/order" },
+  { label: "SUSTAINABILITY", href: "/support/sustainability" },
+  { label: "FIND YOUR REP", href: "/support/find-your-rep" },
   { label: "DESIGNER", href: "/designer" },
-  { label: "COMMERCIAL", href: "/commercial" },
   { label: "CUSTOM WALL", href: "/custom-wall" },
 ];
 

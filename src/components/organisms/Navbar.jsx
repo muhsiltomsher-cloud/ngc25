@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 
 const NAV_ITEMS = [
   { name: "HOME", href: "/", dropdown: false },
+  { name: "CATALOG", href: "/catalog", dropdown: false },
   { name: "MOODBOARD", href: "/moodboard", dropdown: false },
   {
     name: "SEGMENTS",
@@ -58,9 +59,13 @@ const NAV_ITEMS = [
     children: [
       { name: "OUR STORY", href: "/support/our-story" },
       { name: "CONTACT US", href: "/support/contact" },
+      { name: "MEDIA", href: "/media" },
+      { name: "STORE LOCATOR", href: "/store-locator" },
+      { name: "FAQ", href: "/faq" },
+      { name: "TERMS & CONDITIONS", href: "/terms" },
       { name: "SUSTAINABILITY", href: "/support/sustainability" },
       { name: "NEWS", href: "/support/news" },
-      { name: "BLOG", href: "/support/blog" },
+      { name: "BLOG", href: "/blog" },
       { name: "FIND YOUR REP", href: "/support/find-your-rep" },
     ],
   },
@@ -258,6 +263,8 @@ function Navbar() {
               </div>
             )}
           </div>
+
+          {/* Accessibility controls removed per requirement (catalog-only on product pages) */}
         </div>
       </div>
 

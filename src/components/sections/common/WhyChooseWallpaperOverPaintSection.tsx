@@ -22,14 +22,15 @@ interface WhyChoosePaintProps {
   headline: string;
   benefits: Benefit[];
   className?: string;
-  onClick?: () => void;
+  /** Optional DOM id to smooth-scroll to when clicking CTA */
+  scrollTargetId?: string;
 }
 
 const WhyChoosePaint: React.FC<WhyChoosePaintProps> = ({
   headline,
   benefits,
   className = '',
-  onClick,
+  scrollTargetId,
 }) => {
   const sectionRef = useRef<HTMLDivElement | null>(null);
 
@@ -110,8 +111,14 @@ const WhyChoosePaint: React.FC<WhyChoosePaintProps> = ({
 
                   {idx === benefits.length - 1 && (
                     <button
-                      onClick={onClick}
-                      className="ml-auto px-6 py-3 rounded-full bg-primary text-white text-base font-semibold flex items-center gap-2.5 shadow-sm hover:bg-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-colors duration-300"
+                      onClick={() => {
+                        if (scrollTargetId && typeof window !== 'undefined') {
+                          document
+                            .getElementById(scrollTargetId)
+                            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }}
+                      className="ml-auto px-6 py-3 rounded-full bg-primary text-white text-base font-semibold flex items-center gap-2.5 shadow-sm hover:bg-primary-dark focus:outline-none transition-colors duration-300"
                     >
                       All Features
                       <svg width={18} height={18} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

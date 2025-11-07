@@ -8,6 +8,8 @@ import VariationCarousel from '@/components/sections/product/VariationCarousel';
 import ViewModeTabs from '@/components/sections/product/ViewModeTabs';
 import ProductShareBar from '@/components/sections/product/ProductShareBar';
 import ViewInMySpaceModal from '@/components/sections/product/ViewInMySpaceModal';
+import RequestQuoteDrawer from '@/components/sections/product/RequestQuoteDrawer';
+import ProductContrastFab from '@/components/atoms/ProductContrastFab';
 import ProductCarousel from '@/components/sections/product/ProductCarousel';
 import AllVariationsDialog from '@/components/sections/product/AllVariationsDialog';
 import { allProducts, type Product, type ProductVariation, type ProductViewKey } from '@/data/productsData';
@@ -21,7 +23,9 @@ export default function ProductDetailsPage() {
   const [viewMode, setViewMode] = useState<ProductViewKey>('installed');
   const [showMySpace, setShowMySpace] = useState(false);
   const [showAllColors, setShowAllColors] = useState(false);
-  const [addedToCart, setAddedToCart] = useState(false);
+  const [showQuote, setShowQuote] = useState(false);
+  const [quoteTab, setQuoteTab] = useState<'quote' | 'sample'>('quote');
+  // Catalog-only: no cart. Use quote/sample actions instead.
 
   useEffect(() => {
     const found = allProducts.find(p => p.id === id);
@@ -67,6 +71,7 @@ export default function ProductDetailsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      <ProductContrastFab />
       <Container className="py-6 md:py-10">
         <button
           onClick={() => router.back()}
@@ -143,42 +148,40 @@ export default function ProductDetailsPage() {
                   </div>
                 </div>
 
-                <div className="mt-6 flex gap-3">
+                <div className="mt-6 space-y-3">
                   <button
                     type="button"
-                    onClick={() => {
-                      setAddedToCart(true);
-                      setTimeout(() => setAddedToCart(false), 2000);
-                    }}
-                    className="group relative flex-1 overflow-hidden rounded-xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-6 py-4 font-semibold text-white shadow-lg shadow-slate-900/25 transition-all hover:shadow-xl hover:shadow-slate-900/40"
+                    onClick={() => { setQuoteTab('sample'); setShowQuote(true); }}
+                    className="w-full rounded-xl bg-slate-900 px-6 py-4 text-sm font-semibold text-white shadow-lg shadow-slate-900/25 transition-all hover:bg-slate-800 hover:shadow-xl focus:outline-none"
+                    aria-label="Order a sample"
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8m4-4H8" /></svg>
+                      Order a Sample
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setQuoteTab('quote'); setShowQuote(true); }}
+                    className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-6 py-4 text-sm font-semibold text-white shadow-lg shadow-slate-900/25 transition-all hover:shadow-xl hover:shadow-slate-900/40 focus:outline-none"
+                    aria-label="Get a quote"
                   >
                     <span className="relative z-10 flex items-center justify-center gap-2">
-                      {addedToCart ? (
-                        <>
-                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Added to Cart
-                        </>
-                      ) : (
-                        <>
-                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                          </svg>
-                          Add to Cart
-                        </>
-                      )}
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h8M8 11h8m-8 4h5M5 7h.01M5 11h.01M5 15h.01" /></svg>
+                      Get a Quote
                     </span>
                     <div className="absolute inset-0 -z-0 bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 opacity-0 transition-opacity group-hover:opacity-100"></div>
                   </button>
                   <button
                     type="button"
-                    className="rounded-xl border-2 border-slate-200 bg-white p-4 text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50"
-                    title="Add to Wishlist"
+                    onClick={() => { setQuoteTab('calculator' as any); setShowQuote(true); }}
+                    className="w-full rounded-xl border-2 border-slate-300 bg-white px-6 py-4 text-sm font-semibold text-slate-800 transition-all hover:bg-slate-50 focus:outline-none"
+                    aria-label="Roll Calculator"
                   >
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="3" y="3" width="18" height="18" rx="3" /><path d="M7 7h10M7 12h10M7 17h6" /></svg>
+                      Roll Calculator
+                    </span>
                   </button>
                 </div>
 
@@ -303,6 +306,7 @@ export default function ProductDetailsPage() {
           selectedId={selectedVariation?.id}
           onSelect={setSelectedVariation}
         />
+        <RequestQuoteDrawer open={showQuote} onClose={() => setShowQuote(false)} product={product} variation={selectedVariation} initialTab={quoteTab} />
       </Container>
     </div>
   );

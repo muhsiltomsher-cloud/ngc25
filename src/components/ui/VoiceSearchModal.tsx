@@ -112,9 +112,16 @@ export default function VoiceSearchModal({ isOpen, onClose, onSubmit }: VoiceSea
       const a = document.createElement('a');
       a.href = url;
       a.download = `voice-recording-${Date.now()}.webm`;
+      // Append, trigger click, and safely remove without assuming parent-child state
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      // In some dev scenarios or rapid re-renders, the node might already be removed.
+      // Use the safe .remove() API which is a no-op if not connected.
+      if (typeof a.remove === 'function') {
+        a.remove();
+      } else if (a.parentNode) {
+        a.parentNode.removeChild(a);
+      }
       URL.revokeObjectURL(url);
     }
   };

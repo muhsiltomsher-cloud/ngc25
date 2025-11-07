@@ -5,8 +5,8 @@ import React from 'react';
 import HeroBannerSection from '@/components/sections/designer/HeroBannerSection';
 import ShowcaseBrandsSection from '@/components/sections/designer/ShowcaseBrandsSection';
 import CollectionsBrandsSection from '@/components/sections/designer/CollectionsBrandsSection';
-import WhyChooseWallcoveringsSection from '@/components/sections/designer/WhyChooseWallcoveringsSection';
-import WhyChooseWallpaperOverPaintSection from '@/components/sections/designer/WhyChooseWallpaperOverPaintSection';
+import WhyChooseWallcoveringsSection from '@/components/sections/common/WhyChooseWallcoveringsSection';
+import WhyChooseWallpaperOverPaintSection from '@/components/sections/common/WhyChooseWallpaperOverPaintSection';
 import RunwayToWallsSection from '@/components/sections/designer/RunwayToWallsSection';
 
 export default function DesignerWallsPage() {
