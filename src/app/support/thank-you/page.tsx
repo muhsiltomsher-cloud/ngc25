@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Container from '@/components/atoms/Container';
@@ -15,7 +15,7 @@ function decodePayload(raw: string | null) {
   }
 }
 
-export default function ThankYouPage() {
+function ThankYouContent() {
   const params = useSearchParams();
   const router = useRouter();
   const type = params?.get('type') ?? 'quote';
@@ -82,5 +82,25 @@ export default function ThankYouPage() {
         </div>
       </Container>
     </main>
+  );
+}
+
+export default function ThankYouPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+        <Container className="py-12">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="animate-pulse">
+              <div className="h-6 w-32 bg-slate-200 rounded-full mx-auto mb-4"></div>
+              <div className="h-12 w-96 bg-slate-200 rounded mx-auto mb-3"></div>
+              <div className="h-4 w-64 bg-slate-200 rounded mx-auto"></div>
+            </div>
+          </div>
+        </Container>
+      </main>
+    }>
+      <ThankYouContent />
+    </Suspense>
   );
 }
