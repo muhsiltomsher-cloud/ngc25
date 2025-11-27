@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useMemo } from 'react';
+import { Suspense, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Container from '@/components/atoms/Container';
@@ -15,7 +15,7 @@ function decodePayload(raw: string | null) {
   }
 }
 
-export default function ThankYouPage() {
+function ThankYouContent() {
   const params = useSearchParams();
   const router = useRouter();
   const type = params?.get('type') ?? 'quote';
@@ -48,7 +48,7 @@ export default function ThankYouPage() {
           <div className="mx-auto max-w-3xl text-center">
             <span className="inline-block rounded-full bg-slate-900/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-600">Thank you</span>
             <h1 className="mt-3 text-3xl md:text-5xl font-serif font-medium text-gray-900">Your {type === 'sample' ? 'Sample Order' : type === 'quickship' ? 'Quickship Order' : 'Quote Request'} Was Received</h1>
-            <p className="mt-3 text-gray-600">We’ll review your request and get back to you within 1 business day.</p>
+            <p className="mt-3 text-gray-600">We'll review your request and get back to you within 1 business day.</p>
           </div>
         </Container>
       </section>
@@ -59,13 +59,13 @@ export default function ThankYouPage() {
           <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-xl bg-slate-50 p-4">
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-600">Product</div>
-              <div className="text-sm font-semibold text-slate-900">{data?.product?.name ?? '—'}</div>
-              <div className="text-xs text-slate-500">SKU: {data?.product?.sku ?? '—'}</div>
+              <div className="text-sm font-semibold text-slate-900">{data?.product?.name ?? '-'}</div>
+              <div className="text-xs text-slate-500">SKU: {data?.product?.sku ?? '-'}</div>
             </div>
             <div className="rounded-xl bg-slate-50 p-4">
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-600">Request</div>
               <div className="text-sm font-semibold text-slate-900">{type === 'sample' ? 'Order Sample' : type === 'quickship' ? 'Quickship Order' : 'Request Quote'}</div>
-              <div className="text-xs text-slate-500">Submitted: {data?.submittedAt ? new Date(data.submittedAt).toLocaleString() : '—'}</div>
+              <div className="text-xs text-slate-500">Submitted: {data?.submittedAt ? new Date(data.submittedAt).toLocaleString() : '-'}</div>
             </div>
           </div>
           <div className="mt-4 overflow-auto rounded-xl border border-slate-200">
@@ -82,5 +82,19 @@ export default function ThankYouPage() {
         </div>
       </Container>
     </main>
+  );
+}
+
+export default function ThankYouPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+        <Container className="py-12">
+          <div className="mx-auto max-w-3xl text-center text-slate-600">Loading...</div>
+        </Container>
+      </main>
+    }>
+      <ThankYouContent />
+    </Suspense>
   );
 }
